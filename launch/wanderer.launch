@@ -1,0 +1,8 @@
+<launch>
+
+	<node pkg="stage_ros" type="stageros" name="stage" args="$(find stage_ros)/world/willow-erratic.world" />
+
+	<node pkg="wanderer" type="wanderer_node" name="wanderer">
+	</node>
+
+</launch>
