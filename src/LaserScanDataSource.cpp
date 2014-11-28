@@ -1,7 +1,7 @@
 /**
- * Filename: Trajectory.h
+ * Filename: LaserScanDataSource.cpp
  *   Author: Igor Makhtes
- *     Date: Nov 25, 2014
+ *     Date: Nov 28, 2014
  *
  * The MIT License (MIT)
  *
@@ -26,57 +26,27 @@
  * THE SOFTWARE.
  */
 
-#ifndef INCLUDE_WANDERER_TRAJECTORY_H_
-#define INCLUDE_WANDERER_TRAJECTORY_H_
+#include <wanderer/LaserScanDataSource.h>
 
+LaserScanDataSource::LaserScanDataSource(ros::NodeHandle& nodeHandle,
+		const string& topic) {
 
-#include <vector>
+	laserScanSubscriber_ = nodeHandle.subscribe(
+			topic, 1, &LaserScanDataSource::laserScanCallback, this);
 
-#include <boost/foreach.hpp>
+}
 
-#include <nav_msgs/Path.h>
-#include <tf/tf.h>
+void LaserScanDataSource::laserScanCallback(
+		const sensor_msgs::LaserScan::ConstPtr& scan)
+{
+	ICostMapDataSource::clearMap();
 
+	for (int i = 0; i < scan->ranges.size(); ++i) {
+		if (scan->ranges[i] <= scan->range_max && scan->ranges[i] >= scan->range_min) {
+			double x = cos(scan->angle_min + scan->angle_increment * i) * scan->ranges[i];
+			double y = sin(scan->angle_min + scan->angle_increment * i) * scan->ranges[i];
 
-using namespace std;
-
-
-#define foreach BOOST_FOREACH
-
-
-class Trajectory;
-typedef vector<Trajectory> Trajectories;
-
-/*
- *
- */
-class Trajectory {
-
-public:
-
-	Trajectory(double linearVelocity, double angularVelocity);
-
-public:
-
-	void addPosition(double x, double y);
-	void addPosition(const tf::Vector3& position, const tf::Quaternion& orientation);
-	nav_msgs::Path getPath(bool updateStamp = false, const string& frameId = "odom") const;
-	void clearPath();
-
-	void setScore(double score);
-	double getScore() const;
-
-	double getLinearVelocity() const;
-	double getAngularVelocity() const;
-
-private:
-
-	double score_;
-	nav_msgs::Path path_;
-
-	double linearVelocity_;
-	double angularVelocity_;
-
-};
-
-#endif /* INCLUDE_WANDERER_TRAJECTORY_H_ */
+			ICostMapDataSource::emitPoint(x, y, scan->header.frame_id, scan->header.stamp);
+		}
+	}
+}

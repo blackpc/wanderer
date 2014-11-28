@@ -59,6 +59,11 @@ private:
 	double simulationTime_;
 	double granularity_;
 
+private:
+
+	tf::Transform createVelocityTransform(double linearVelocity,
+			double angularVelocity, double timeStep) const;
+
 };
 
 #endif /* INCLUDE_WANDERER_TRAJECTORYSIMULATOR_H_ */

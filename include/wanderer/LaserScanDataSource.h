@@ -1,7 +1,7 @@
 /**
- * Filename: Trajectory.h
+ * Filename: LaserScanDataSource.h
  *   Author: Igor Makhtes
- *     Date: Nov 25, 2014
+ *     Date: Nov 28, 2014
  *
  * The MIT License (MIT)
  *
@@ -26,57 +26,32 @@
  * THE SOFTWARE.
  */
 
-#ifndef INCLUDE_WANDERER_TRAJECTORY_H_
-#define INCLUDE_WANDERER_TRAJECTORY_H_
+#ifndef INCLUDE_WANDERER_LASERSCANDATASOURCE_H_
+#define INCLUDE_WANDERER_LASERSCANDATASOURCE_H_
 
 
-#include <vector>
+#include <sensor_msgs/LaserScan.h>
 
-#include <boost/foreach.hpp>
+#include <wanderer/ICostMapDataSource.h>
 
-#include <nav_msgs/Path.h>
-#include <tf/tf.h>
-
-
-using namespace std;
-
-
-#define foreach BOOST_FOREACH
-
-
-class Trajectory;
-typedef vector<Trajectory> Trajectories;
 
 /*
  *
  */
-class Trajectory {
+class LaserScanDataSource : public ICostMapDataSource {
 
 public:
 
-	Trajectory(double linearVelocity, double angularVelocity);
-
-public:
-
-	void addPosition(double x, double y);
-	void addPosition(const tf::Vector3& position, const tf::Quaternion& orientation);
-	nav_msgs::Path getPath(bool updateStamp = false, const string& frameId = "odom") const;
-	void clearPath();
-
-	void setScore(double score);
-	double getScore() const;
-
-	double getLinearVelocity() const;
-	double getAngularVelocity() const;
+	LaserScanDataSource(ros::NodeHandle& nodeHande, const string& topic);
 
 private:
 
-	double score_;
-	nav_msgs::Path path_;
+	ros::Subscriber laserScanSubscriber_;
 
-	double linearVelocity_;
-	double angularVelocity_;
+private:
+
+	void laserScanCallback(const sensor_msgs::LaserScan::ConstPtr& scan);
 
 };
 
-#endif /* INCLUDE_WANDERER_TRAJECTORY_H_ */
+#endif /* INCLUDE_WANDERER_LASERSCANDATASOURCE_H_ */

@@ -29,44 +29,38 @@
 
 #include <boost/thread.hpp>
 
+#include <wanderer/CostMap.h>
+#include <wanderer/LaserScanDataSource.h>
 #include <wanderer/TrajectorySimulator.h>
 #include <wanderer/Wandering.h>
 
 
 using namespace std;
+using namespace cv;
 
 
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "wanderer_node");
 	ros::NodeHandle nodePrivate("~");
 
+	LaserScanDataSource* laserScanDataSource = new LaserScanDataSource(nodePrivate, "/base_scan");
+	CostMap m(laserScanDataSource, 100, 100, 0.1, "odom");
 
-	Wandering wanderer;
-	wanderer.start();
+	ros::Publisher mapPublisher = nodePrivate.advertise<nav_msgs::OccupancyGrid>("/map", 1, false);
 
+	ros::Rate rate(10);
 
-	TrajectorySimulator simulator(10, 0.1);
-	ros::Publisher pathPublisher = nodePrivate.advertise<nav_msgs::Path>("/path", 1, false);
+	int counter = 10 * 5;
 
-	double linear = 0.5;
-	double angular = 0.1;
+	while (counter-- > 0) {
+		ros::spinOnce();
 
-	double t = 0;
+		mapPublisher.publish(m.getOccupancyGrid());
+		rate.sleep();
 
-	while (ros::ok()) {
-
-		for (int i = 0; i < 11; ++i) {
-			Trajectory trajectory = simulator.simulate(linear, ((i - 5.0) / 10.0));
-
-			pathPublisher.publish(trajectory.getPath(true));
-
-//			t += 0.005;
-		}
-
-//		break;
-		boost::this_thread::sleep(boost::posix_time::milliseconds(1000 / 60));
+		cout << counter << endl;
 	}
 
-	ros::spin();
+	delete laserScanDataSource;
 	return 0;
 }

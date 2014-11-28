@@ -1,7 +1,7 @@
 /**
- * Filename: Trajectory.h
+ * Filename: ICostMapDataSource.h
  *   Author: Igor Makhtes
- *     Date: Nov 25, 2014
+ *     Date: Nov 28, 2014
  *
  * The MIT License (MIT)
  *
@@ -26,57 +26,58 @@
  * THE SOFTWARE.
  */
 
-#ifndef INCLUDE_WANDERER_TRAJECTORY_H_
-#define INCLUDE_WANDERER_TRAJECTORY_H_
+#ifndef INCLUDE_WANDERER_ICOSTMAPDATASOURCE_H_
+#define INCLUDE_WANDERER_ICOSTMAPDATASOURCE_H_
 
 
-#include <vector>
+#include <string>
 
-#include <boost/foreach.hpp>
+#include <boost/function.hpp>
 
-#include <nav_msgs/Path.h>
-#include <tf/tf.h>
+#include <ros/ros.h>
+
+// #include <wanderer/CostMap.h>
 
 
 using namespace std;
 
 
-#define foreach BOOST_FOREACH
+class CostMap;
 
-
-class Trajectory;
-typedef vector<Trajectory> Trajectories;
 
 /*
- *
+ * Data source interface for CostMap
  */
-class Trajectory {
+class ICostMapDataSource {
+
+	friend CostMap;
 
 public:
 
-	Trajectory(double linearVelocity, double angularVelocity);
+	virtual ~ICostMapDataSource() { }
 
 public:
 
-	void addPosition(double x, double y);
-	void addPosition(const tf::Vector3& position, const tf::Quaternion& orientation);
-	nav_msgs::Path getPath(bool updateStamp = false, const string& frameId = "odom") const;
-	void clearPath();
+	inline void clearMap() const {
+		clearMapCallback();
+	}
 
-	void setScore(double score);
-	double getScore() const;
+	inline void emitPoint(double x, double y, const string& frameId, ros::Time stamp) const {
+		emitPointCallback(x, y, boost::ref(frameId), stamp);
+	}
 
-	double getLinearVelocity() const;
-	double getAngularVelocity() const;
+protected:
+
+	ICostMapDataSource() { }
 
 private:
 
-	double score_;
-	nav_msgs::Path path_;
+	typedef boost::function<void()> ClearMapCallback;
+	typedef boost::function<void(double, double, const string&, ros::Time)> EmitPointCallback;
 
-	double linearVelocity_;
-	double angularVelocity_;
+	ClearMapCallback clearMapCallback;
+	EmitPointCallback emitPointCallback;
 
 };
 
-#endif /* INCLUDE_WANDERER_TRAJECTORY_H_ */
+#endif /* INCLUDE_WANDERER_ICOSTMAPDATASOURCE_H_ */

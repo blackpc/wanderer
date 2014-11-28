@@ -36,7 +36,7 @@ TrajectorySimulator::TrajectorySimulator(double simulationTime, double granulari
 Trajectory TrajectorySimulator::simulate(double linearVelocity,
 		double angularVelocity) const
 {
-	Trajectory trajectory;
+	Trajectory trajectory(linearVelocity, angularVelocity);
 
 	int steps = simulationTime_ / granularity_;
 	float timeStep = granularity_;
@@ -44,11 +44,8 @@ Trajectory TrajectorySimulator::simulate(double linearVelocity,
 	tf::Transform position;
 	position.setIdentity();
 
-	tf::Transform velocityVector;
-	velocityVector.setOrigin(tf::Vector3(linearVelocity * timeStep, 0, 0));
-	tf::Quaternion rotationVelocity;
-	rotationVelocity.setRPY(0, 0, angularVelocity *  timeStep);
-	velocityVector.setRotation(rotationVelocity);
+	tf::Transform velocityVector =
+			createVelocityTransform(linearVelocity, angularVelocity, timeStep);
 
 	for (int step = 0; step < steps; ++step) {
 		position = position * velocityVector;
@@ -72,4 +69,19 @@ void TrajectorySimulator::setGranularity(double granularity) {
 
 double TrajectorySimulator::getGranularity() const {
 	return granularity_;
+}
+
+tf::Transform TrajectorySimulator::createVelocityTransform(
+		double linearVelocity, double angularVelocity, double timeStep) const {
+
+	tf::Transform velocityVector;
+
+	velocityVector.setOrigin(tf::Vector3(linearVelocity * timeStep, 0, 0));
+
+	tf::Quaternion rotationVelocity;
+	rotationVelocity.setRPY(0, 0, angularVelocity *  timeStep);
+
+	velocityVector.setRotation(rotationVelocity);
+
+	return velocityVector;
 }

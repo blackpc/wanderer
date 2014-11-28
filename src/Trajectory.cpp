@@ -28,15 +28,13 @@
 
 #include <wanderer/Trajectory.h>
 
-Trajectory::Trajectory() : score_(0) {
-	path_.header.frame_id = "odom";
+Trajectory::Trajectory(double linearVelocity, double angularVelocity)
+	: score_(0), linearVelocity_(linearVelocity), angularVelocity_(angularVelocity) {
 }
 
 void Trajectory::addPosition(double x, double y) {
 	geometry_msgs::PoseStamped newPose;
 
-
-	newPose.header.frame_id = "odom";
 	newPose.header.stamp = ros::Time::now();
 	newPose.pose.orientation.w = 1;
 	newPose.pose.position.x = x;
@@ -65,14 +63,16 @@ void Trajectory::addPosition(const tf::Vector3& position,
 	path_.poses.push_back(newPose);
 }
 
-nav_msgs::Path Trajectory::getPath(bool updateStamp) const {
+nav_msgs::Path Trajectory::getPath(bool updateStamp, const string& frameId) const {
 	nav_msgs::Path path = path_;
+	path.header.frame_id = frameId;
 
 	foreach(geometry_msgs::PoseStamped& pose, path.poses) {
 		pose.header.stamp = ros::Time::now();
+		pose.header.frame_id = frameId;
 	}
 
-	return path_;
+	return path;
 }
 
 void Trajectory::clearPath() {
@@ -85,4 +85,12 @@ void Trajectory::setScore(double score) {
 
 double Trajectory::getScore() const {
 	return score_;
+}
+
+double Trajectory::getLinearVelocity() const {
+	return linearVelocity_;
+}
+
+double Trajectory::getAngularVelocity() const {
+	return angularVelocity_;
 }
