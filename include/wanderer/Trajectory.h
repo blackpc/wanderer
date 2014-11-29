@@ -45,7 +45,7 @@ using namespace std;
 
 
 /*
- *
+ * Represents a single simulated path
  */
 class Trajectory {
 

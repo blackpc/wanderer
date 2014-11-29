@@ -44,17 +44,19 @@
 using namespace std;
 
 
-/*
- * CostMap
+/**
+ * Generic cost map representation.
+ * Can be used with various data sources
+ * @see IDataSource
  */
 class CostMap {
 
 public:
 
 	/**
-	 *
+	 * Initializes the cost map with specified parameters
 	 * @param inflationRadius Inflation radius in meters
-	 * @param mapWidth Map witdh in meters
+	 * @param mapWidth Map width in meters
 	 * @param mapHeight Map height in meters
 	 * @param resolution
 	 * @param frameId Robot's frame id, all points from the ICostMapDataSource will be transformed into this frame.
@@ -107,7 +109,7 @@ protected:
 	tf::TransformListener tfListener_;
 
 	/**
-	 * Inlfation radius in meters
+	 * Inflation radius in meters
 	 */
 	double inflationRadius_;
 

@@ -39,7 +39,7 @@ using namespace std;
 
 
 /*
- *
+ * Holds trajectory match result
  */
 class TrajectoryMatch {
 
@@ -68,12 +68,25 @@ public:
 
 public:
 
+	/**
+	 * Constructs trajectory match
+	 * @param trajectory
+	 * @param score
+	 */
 	TrajectoryMatch(Trajectory::Ptr& trajectory, double score);
 
 public:
 
+	/**
+	 * Gets score of this trajectory
+	 * @return
+	 */
 	double getScore() const;
 
+	/**
+	 * Gets trajectory
+	 * @return
+	 */
 	Trajectory::Ptr getTrajectory() const;
 
 private:

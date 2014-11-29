@@ -36,8 +36,6 @@
 
 #include <ros/ros.h>
 
-// #include <wanderer/CostMap.h>
-
 
 using namespace std;
 
@@ -64,10 +62,20 @@ public:
 	 */
 	virtual string getName() const = 0;
 
+	/**
+	 * Clears cost map
+	 */
 	inline void clearMap() const {
 		clearMapCallback();
 	}
 
+	/**
+	 * Publishes a point to the cost map
+	 * @param x
+	 * @param y
+	 * @param frameId
+	 * @param stamp
+	 */
 	inline void emitPoint(double x, double y, const string& frameId, ros::Time stamp) const {
 		emitPointCallback(x, y, boost::ref(frameId), stamp);
 	}

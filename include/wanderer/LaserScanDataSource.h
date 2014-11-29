@@ -36,7 +36,7 @@
 
 
 /*
- *
+ * LaserScan subscriber data source for cost map
  */
 class LaserScanDataSource : public ICostMapDataSource {
 
