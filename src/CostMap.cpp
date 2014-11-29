@@ -28,9 +28,9 @@
 
 #include <wanderer/CostMap.h>
 
-CostMap::CostMap(ICostMapDataSource* dataSource, double mapWidth,
+CostMap::CostMap(ICostMapDataSource* dataSource, double inflationRadius, double mapWidth,
 		double mapHeight, double resolution, const string& frameId)
-	: dataSource_(dataSource) {
+	: inflationRadius_(inflationRadius), dataSource_(dataSource) {
 
 	createOccupancyGrid(mapWidth, mapHeight, resolution, frameId);
 
@@ -38,10 +38,45 @@ CostMap::CostMap(ICostMapDataSource* dataSource, double mapWidth,
 			boost::bind(&CostMap::clearMapCallback, this);
 	dataSource_->emitPointCallback =
 			boost::bind(&CostMap::addPointCallback, this, _1, _2, _3, _4);
+
+	printSummary();
 }
 
 nav_msgs::OccupancyGrid::ConstPtr CostMap::getOccupancyGrid() const {
 	return boost::const_pointer_cast<nav_msgs::OccupancyGrid const>(occupancyGrid_);
+}
+
+cv::Mat CostMap::getCvMatrix() const {
+	return cvMatrix_;
+}
+
+void CostMap::printSummary() const {
+	ROS_INFO("CostMap summary:");
+
+	ROS_INFO(" Data source: %s", dataSource_->getName().c_str());
+
+	ROS_INFO("       Width: %fm (%ipx)",
+			occupancyGrid_->info.width * occupancyGrid_->info.resolution,
+			occupancyGrid_->info.width);
+
+	ROS_INFO("      Height: %fm (%ipx)",
+			occupancyGrid_->info.height * occupancyGrid_->info.resolution,
+			occupancyGrid_->info.height);
+
+	ROS_INFO("  Resolution: %fm/px",
+			occupancyGrid_->info.resolution);
+
+	ROS_INFO("   Inflation: %fm (%ipx)",
+			inflationRadius_,
+			(int)(inflationRadius_ / occupancyGrid_->info.resolution));
+
+	ROS_INFO("    Origin x: %fm (%ipx)",
+			occupancyGrid_->info.origin.position.x,
+			(int)(occupancyGrid_->info.origin.position.x / occupancyGrid_->info.resolution));
+
+	ROS_INFO("    Origin y: %fm (%ipx)",
+			occupancyGrid_->info.origin.position.y,
+			(int)(occupancyGrid_->info.origin.position.y / occupancyGrid_->info.resolution));
 }
 
 void CostMap::createOccupancyGrid(double mapWidth,
@@ -91,6 +126,10 @@ void CostMap::addPointCallback(double x, double y, const string& frameId, ros::T
 	cv::Point pixel = localCoordinatesToPixel(localMapCoordinates);
 
 	if (pixel.x >= 0 && pixel.x < cvMatrix_.cols &&
-			pixel.y >= 0 && pixel.y < cvMatrix_.rows)
-		cvMatrix_.at<char>(pixel) = 100;
+			pixel.y >= 0 && pixel.y < cvMatrix_.rows) {
+
+//		cv::line(cvMatrix_, cv::Point(occupancyGrid_->info.width / 2, occupancyGrid_->info.height / 2), pixel, 0, 1);
+		cv::circle(cvMatrix_, pixel, inflationRadius_ / occupancyGrid_->info.resolution, 100, -1);
+
+	}
 }

@@ -28,8 +28,9 @@
 
 #include <wanderer/Trajectory.h>
 
-Trajectory::Trajectory(double linearVelocity, double angularVelocity)
-	: score_(0), linearVelocity_(linearVelocity), angularVelocity_(angularVelocity) {
+Trajectory::Trajectory(double linearVelocity, double angularVelocity, double weight)
+	: score_(0), weight_(weight), linearVelocity_(linearVelocity), angularVelocity_(angularVelocity) {
+	path_ = nav_msgs::Path::Ptr(new nav_msgs::Path());
 }
 
 void Trajectory::addPosition(double x, double y) {
@@ -40,7 +41,7 @@ void Trajectory::addPosition(double x, double y) {
 	newPose.pose.position.x = x;
 	newPose.pose.position.y = y;
 
-	path_.poses.push_back(newPose);
+	path_->poses.push_back(newPose);
 }
 
 void Trajectory::addPosition(const tf::Vector3& position,
@@ -48,7 +49,7 @@ void Trajectory::addPosition(const tf::Vector3& position,
 {
 	geometry_msgs::PoseStamped newPose;
 
-	newPose.header.frame_id = "odom";
+	// newPose.header.frame_id = ""; // set in getPath()
 	newPose.header.stamp = ros::Time::now();
 
 	newPose.pose.position.x = position.x();
@@ -60,23 +61,26 @@ void Trajectory::addPosition(const tf::Vector3& position,
 	newPose.pose.orientation.z = orientation.z();
 	newPose.pose.orientation.w = orientation.w();
 
-	path_.poses.push_back(newPose);
+	path_->poses.push_back(newPose);
 }
 
-nav_msgs::Path Trajectory::getPath(bool updateStamp, const string& frameId) const {
-	nav_msgs::Path path = path_;
-	path.header.frame_id = frameId;
+nav_msgs::Path::Ptr Trajectory::getPath(bool updateStamp, const string& frameId) {
+	path_->header.frame_id = frameId;
 
-	foreach(geometry_msgs::PoseStamped& pose, path.poses) {
+	foreach(geometry_msgs::PoseStamped& pose, path_->poses) {
 		pose.header.stamp = ros::Time::now();
 		pose.header.frame_id = frameId;
 	}
 
-	return path;
+	return path_;
+}
+
+nav_msgs::Path::Ptr Trajectory::getPath() const {
+	return path_;
 }
 
 void Trajectory::clearPath() {
-	path_.poses.clear();
+	path_->poses.clear();
 }
 
 void Trajectory::setScore(double score) {
@@ -89,6 +93,12 @@ double Trajectory::getScore() const {
 
 double Trajectory::getLinearVelocity() const {
 	return linearVelocity_;
+}
+
+void Trajectory::setWeight(double weight) {
+}
+
+double Trajectory::getWeight() const {
 }
 
 double Trajectory::getAngularVelocity() const {

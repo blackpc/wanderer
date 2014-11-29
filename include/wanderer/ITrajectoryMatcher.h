@@ -1,7 +1,7 @@
 /**
- * Filename: ICostMapDataSource.h
+ * Filename: ITrajectoryMatcher.h
  *   Author: Igor Makhtes
- *     Date: Nov 28, 2014
+ *     Date: Nov 29, 2014
  *
  * The MIT License (MIT)
  *
@@ -26,60 +26,48 @@
  * THE SOFTWARE.
  */
 
-#ifndef INCLUDE_WANDERER_ICOSTMAPDATASOURCE_H_
-#define INCLUDE_WANDERER_ICOSTMAPDATASOURCE_H_
+#ifndef INCLUDE_WANDERER_ITRAJECTORYMATCHER_H_
+#define INCLUDE_WANDERER_ITRAJECTORYMATCHER_H_
 
 
-#include <string>
-
-#include <boost/function.hpp>
-
-#include <ros/ros.h>
-
-// #include <wanderer/CostMap.h>
-
-
-using namespace std;
-
-
-class CostMap;
-
+#include <wanderer/CostMap.h>
+#include <wanderer/TrajectoryMatch.h>
 
 /*
- * Data source interface for CostMap
+ * Trajectory matcher interface, used to evaluate trajectories against a cost map
  */
-class ICostMapDataSource {
-
-	friend CostMap;
+class ITrajectoryMatcher {
 
 public:
 
-	virtual ~ICostMapDataSource() { }
+	virtual ~ITrajectoryMatcher() { }
 
 public:
 
 	/**
-	 * Name of this data source
+	 * Evaluate one trajectory
+	 * @param costMap
+	 * @param trajectory
 	 * @return
 	 */
-	virtual string getName() const = 0;
+	virtual TrajectoryMatch::Ptr match(CostMap& costMap, Trajectory::Ptr trajectory) const = 0;
 
-	inline void clearMap() const {
-		clearMapCallback();
+	/**
+	 * Evaluate number of trajectories and returns a sorted set of matches by score
+	 * @param costMap
+	 * @param trajectories
+	 * @return
+	 */
+	virtual TrajectoryMatch::SetPtr match(CostMap& costMap, vector<Trajectory::Ptr> trajectories) const {
+		TrajectoryMatch::SetPtr trajectoryMatchSet(new TrajectoryMatch::SetPtr());
+
+		for (int i = 0; i < trajectories.size(); ++i) {
+			trajectoryMatchSet->insert(match(costMap, trajectories[i]));
+		}
+
+		return trajectoryMatchSet;
 	}
-
-	inline void emitPoint(double x, double y, const string& frameId, ros::Time stamp) const {
-		emitPointCallback(x, y, boost::ref(frameId), stamp);
-	}
-
-private:
-
-	typedef boost::function<void()> ClearMapCallback;
-	typedef boost::function<void(double, double, const string&, ros::Time)> EmitPointCallback;
-
-	ClearMapCallback clearMapCallback;
-	EmitPointCallback emitPointCallback;
 
 };
 
-#endif /* INCLUDE_WANDERER_ICOSTMAPDATASOURCE_H_ */
+#endif /* INCLUDE_WANDERER_ITRAJECTORYMATCHER_H_ */

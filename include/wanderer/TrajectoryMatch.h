@@ -1,7 +1,7 @@
 /**
- * Filename: ICostMapDataSource.h
+ * Filename: TrajectoryMatch.h
  *   Author: Igor Makhtes
- *     Date: Nov 28, 2014
+ *     Date: Nov 29, 2014
  *
  * The MIT License (MIT)
  *
@@ -26,60 +26,62 @@
  * THE SOFTWARE.
  */
 
-#ifndef INCLUDE_WANDERER_ICOSTMAPDATASOURCE_H_
-#define INCLUDE_WANDERER_ICOSTMAPDATASOURCE_H_
+#ifndef INCLUDE_WANDERER_TRAJECTORYMATCH_H_
+#define INCLUDE_WANDERER_TRAJECTORYMATCH_H_
 
 
-#include <string>
+#include <set>
 
-#include <boost/function.hpp>
-
-#include <ros/ros.h>
-
-// #include <wanderer/CostMap.h>
+#include <wanderer/Trajectory.h>
 
 
 using namespace std;
 
 
-class CostMap;
-
-
 /*
- * Data source interface for CostMap
+ *
  */
-class ICostMapDataSource {
-
-	friend CostMap;
+class TrajectoryMatch {
 
 public:
 
-	virtual ~ICostMapDataSource() { }
+	typedef boost::shared_ptr<TrajectoryMatch> Ptr;
 
 public:
 
-	/**
-	 * Name of this data source
-	 * @return
-	 */
-	virtual string getName() const = 0;
+	struct TrajectoryMatchComparator {
+		bool operator() (const TrajectoryMatch& first,
+				const TrajectoryMatch& second) const {
+			return first.getScore() < second.getScore();
+		}
 
-	inline void clearMap() const {
-		clearMapCallback();
-	}
+		bool operator() (const TrajectoryMatch::Ptr& first,
+				const TrajectoryMatch::Ptr& second) const {
+			return first->getScore() < second->getScore();
+		}
+	};
 
-	inline void emitPoint(double x, double y, const string& frameId, ros::Time stamp) const {
-		emitPointCallback(x, y, boost::ref(frameId), stamp);
-	}
+public:
+
+	typedef multiset<TrajectoryMatch::Ptr, TrajectoryMatch::TrajectoryMatchComparator> Set;
+	typedef boost::shared_ptr<Set> SetPtr;
+
+public:
+
+	TrajectoryMatch(Trajectory::Ptr& trajectory, double score);
+
+public:
+
+	double getScore() const;
+
+	Trajectory::Ptr getTrajectory() const;
 
 private:
 
-	typedef boost::function<void()> ClearMapCallback;
-	typedef boost::function<void(double, double, const string&, ros::Time)> EmitPointCallback;
+	double score_;
 
-	ClearMapCallback clearMapCallback;
-	EmitPointCallback emitPointCallback;
+	Trajectory::Ptr trajectory_;
 
 };
 
-#endif /* INCLUDE_WANDERER_ICOSTMAPDATASOURCE_H_ */
+#endif /* INCLUDE_WANDERER_TRAJECTORYMATCH_H_ */

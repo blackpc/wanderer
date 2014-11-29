@@ -44,9 +44,6 @@ using namespace std;
 #define foreach BOOST_FOREACH
 
 
-class Trajectory;
-typedef vector<Trajectory> Trajectories;
-
 /*
  *
  */
@@ -54,17 +51,52 @@ class Trajectory {
 
 public:
 
-	Trajectory(double linearVelocity, double angularVelocity);
+	typedef boost::shared_ptr<Trajectory> Ptr;
+	typedef boost::shared_ptr<Trajectory const> ConstPtr;
+	typedef vector<Trajectory> Vector;
 
 public:
 
+	Trajectory(double linearVelocity, double angularVelocity, double weight = 1);
+
+public:
+
+	/**
+	 * Adds position to the path with zero rotation
+	 * @param x
+	 * @param y
+	 */
 	void addPosition(double x, double y);
+
+	/**
+	 * Adds position to the path
+	 * @param position
+	 * @param orientation
+	 */
 	void addPosition(const tf::Vector3& position, const tf::Quaternion& orientation);
-	nav_msgs::Path getPath(bool updateStamp = false, const string& frameId = "odom") const;
+
+	/**
+	 * Returns path with updated time stamp and frame id
+	 * @param updateStamp
+	 * @param frameId
+	 * @return
+	 */
+	nav_msgs::Path::Ptr getPath(
+			bool updateStamp, const string& frameId);
+
+	/**
+	 * Returns path with a default frame id and old time stamp
+	 * @return
+	 */
+	nav_msgs::Path::Ptr getPath() const;
+
 	void clearPath();
 
 	void setScore(double score);
 	double getScore() const;
+
+	void setWeight(double weight);
+	double getWeight() const;
 
 	double getLinearVelocity() const;
 	double getAngularVelocity() const;
@@ -72,7 +104,8 @@ public:
 private:
 
 	double score_;
-	nav_msgs::Path path_;
+	double weight_;
+	nav_msgs::Path::Ptr path_;
 
 	double linearVelocity_;
 	double angularVelocity_;

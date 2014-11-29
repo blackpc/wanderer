@@ -36,7 +36,7 @@
 
 
 /*
- *
+ * Simulates trajectories using linear and angular velocities
  */
 class TrajectorySimulator {
 
@@ -46,7 +46,7 @@ public:
 
 public:
 
-	Trajectory simulate(double linearVelocity, double angularVelocity) const;
+	Trajectory::Ptr simulate(double linearVelocity, double angularVelocity) const;
 
 	void setSimulationTime(double simulationTime);
 	double getSimulationTime() const;

@@ -38,27 +38,34 @@
 using namespace std;
 using namespace cv;
 
+void test() {
+}
 
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "wanderer_node");
 	ros::NodeHandle nodePrivate("~");
 
 	LaserScanDataSource* laserScanDataSource = new LaserScanDataSource(nodePrivate, "/base_scan");
-	CostMap m(laserScanDataSource, 100, 100, 0.1, "odom");
+	CostMap costMap(laserScanDataSource, 0.25, 11, 11, 0.025, "base_link");
+	TrajectorySimulator trajectorySimulator(2, 0.1);
 
 	ros::Publisher mapPublisher = nodePrivate.advertise<nav_msgs::OccupancyGrid>("/map", 1, false);
+	ros::Publisher pathPublisher = nodePrivate.advertise<nav_msgs::Path>("/path", 10, false);
 
 	ros::Rate rate(10);
 
-	int counter = 10 * 5;
-
-	while (counter-- > 0) {
+	while (ros::ok()) {
 		ros::spinOnce();
 
-		mapPublisher.publish(m.getOccupancyGrid());
-		rate.sleep();
+		mapPublisher.publish(costMap.getOccupancyGrid());
 
-		cout << counter << endl;
+		for (int i = 0; i < 11; ++i) {
+			Trajectory::Ptr trajectory = trajectorySimulator.simulate(1, pow( 2 * (i - 5.0) / 11.0, 3));
+			pathPublisher.publish(trajectory->getPath(true, "base_link"));
+			boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+		}
+
+		rate.sleep();
 	}
 
 	delete laserScanDataSource;

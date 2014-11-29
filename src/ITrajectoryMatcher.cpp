@@ -1,7 +1,7 @@
 /**
- * Filename: ICostMapDataSource.h
+ * Filename: ITrajectoryMatcher.cpp
  *   Author: Igor Makhtes
- *     Date: Nov 28, 2014
+ *     Date: Nov 29, 2014
  *
  * The MIT License (MIT)
  *
@@ -26,60 +26,6 @@
  * THE SOFTWARE.
  */
 
-#ifndef INCLUDE_WANDERER_ICOSTMAPDATASOURCE_H_
-#define INCLUDE_WANDERER_ICOSTMAPDATASOURCE_H_
+#include <wanderer/ITrajectoryMatcher.h>
 
 
-#include <string>
-
-#include <boost/function.hpp>
-
-#include <ros/ros.h>
-
-// #include <wanderer/CostMap.h>
-
-
-using namespace std;
-
-
-class CostMap;
-
-
-/*
- * Data source interface for CostMap
- */
-class ICostMapDataSource {
-
-	friend CostMap;
-
-public:
-
-	virtual ~ICostMapDataSource() { }
-
-public:
-
-	/**
-	 * Name of this data source
-	 * @return
-	 */
-	virtual string getName() const = 0;
-
-	inline void clearMap() const {
-		clearMapCallback();
-	}
-
-	inline void emitPoint(double x, double y, const string& frameId, ros::Time stamp) const {
-		emitPointCallback(x, y, boost::ref(frameId), stamp);
-	}
-
-private:
-
-	typedef boost::function<void()> ClearMapCallback;
-	typedef boost::function<void(double, double, const string&, ros::Time)> EmitPointCallback;
-
-	ClearMapCallback clearMapCallback;
-	EmitPointCallback emitPointCallback;
-
-};
-
-#endif /* INCLUDE_WANDERER_ICOSTMAPDATASOURCE_H_ */

@@ -33,10 +33,10 @@ TrajectorySimulator::TrajectorySimulator(double simulationTime, double granulari
 {
 }
 
-Trajectory TrajectorySimulator::simulate(double linearVelocity,
+Trajectory::Ptr TrajectorySimulator::simulate(double linearVelocity,
 		double angularVelocity) const
 {
-	Trajectory trajectory(linearVelocity, angularVelocity);
+	Trajectory::Ptr trajectory(new Trajectory(linearVelocity, angularVelocity));
 
 	int steps = simulationTime_ / granularity_;
 	float timeStep = granularity_;
@@ -49,7 +49,7 @@ Trajectory TrajectorySimulator::simulate(double linearVelocity,
 
 	for (int step = 0; step < steps; ++step) {
 		position = position * velocityVector;
-		trajectory.addPosition(position.getOrigin(), position.getRotation());
+		trajectory->addPosition(position.getOrigin(), position.getRotation());
 	}
 
 	return trajectory;

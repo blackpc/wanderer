@@ -44,6 +44,12 @@ public:
 
 	LaserScanDataSource(ros::NodeHandle& nodeHande, const string& topic);
 
+public:
+
+	virtual string getName() const {
+		return "LaserScan";
+	}
+
 private:
 
 	ros::Subscriber laserScanSubscriber_;

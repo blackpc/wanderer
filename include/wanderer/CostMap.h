@@ -45,7 +45,7 @@ using namespace std;
 
 
 /*
- *
+ * CostMap
  */
 class CostMap {
 
@@ -53,6 +53,7 @@ public:
 
 	/**
 	 *
+	 * @param inflationRadius Inflation radius in meters
 	 * @param mapWidth Map witdh in meters
 	 * @param mapHeight Map height in meters
 	 * @param resolution
@@ -61,7 +62,7 @@ public:
 	 * @warning Currently the origin of the map it the center
 	 * @todo add originX, originY
 	 */
-	CostMap(ICostMapDataSource* dataSource, double mapWidth,
+	CostMap(ICostMapDataSource* dataSource, double inflationRadius, double mapWidth,
 			double mapHeight, double resolution, const string& frameId);
 
 public:
@@ -71,6 +72,12 @@ public:
 	 * @return occupancy grid
 	 */
 	nav_msgs::OccupancyGrid::ConstPtr getOccupancyGrid() const;
+
+	/**
+	 * Returns cv::Mat of the cost map
+	 * @return
+	 */
+	cv::Mat getCvMatrix() const;
 
 	/**
 	 * Set all cells of the map to unknown(-1)
@@ -99,7 +106,17 @@ protected:
 	 */
 	tf::TransformListener tfListener_;
 
+	/**
+	 * Inlfation radius in meters
+	 */
+	double inflationRadius_;
+
 protected:
+
+	/**
+	 * Prints summary to ROS console
+	 */
+	void printSummary() const;
 
 	/**
 	 * Creates the occupancy grid message

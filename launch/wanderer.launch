@@ -5,4 +5,6 @@
 	<node pkg="wanderer" type="wanderer_node" name="wanderer">
 	</node>
 
+	<node pkg="rviz" type="rviz" name="rviz" />
+
 </launch>
