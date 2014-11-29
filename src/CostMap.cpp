@@ -110,6 +110,18 @@ void CostMap::clearMap() {
 	memset(occupancyGrid_->data.data(), -1, occupancyGrid_->data.size());
 }
 
+char CostMap::getCellValue(const geometry_msgs::Pose& pose) const {
+	cv::Point pixel = localCoordinatesToPixel(pose.position.x, pose.position.y);
+
+	if (isInBounds(pixel))
+		return cvMatrix_.at<char>(pixel);
+
+	/**
+	 * Out of map points considered as unknown
+	 */
+	return -1;
+}
+
 void CostMap::addPointCallback(double x, double y, const string& frameId, ros::Time stamp) {
 	tf::StampedTransform dataSourceToMapTransform;
 

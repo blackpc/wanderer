@@ -58,11 +58,11 @@ public:
 	 * @param trajectories
 	 * @return
 	 */
-	virtual TrajectoryMatch::SetPtr match(CostMap& costMap, vector<Trajectory::Ptr> trajectories) const {
-		TrajectoryMatch::SetPtr trajectoryMatchSet(new TrajectoryMatch::SetPtr());
+	virtual TrajectoryMatch::SetPtr match(CostMap& costMap, Trajectory::VectorPtr trajectories) const {
+		TrajectoryMatch::SetPtr trajectoryMatchSet(new TrajectoryMatch::Set());
 
-		for (int i = 0; i < trajectories.size(); ++i) {
-			trajectoryMatchSet->insert(match(costMap, trajectories[i]));
+		for (int i = 0; i < trajectories->size(); ++i) {
+			trajectoryMatchSet->insert(match(costMap, (*trajectories)[i]));
 		}
 
 		return trajectoryMatchSet;

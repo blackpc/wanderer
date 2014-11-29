@@ -48,19 +48,51 @@ public:
 
 	Trajectory::Ptr simulate(double linearVelocity, double angularVelocity) const;
 
+	/**
+	 * Sets simulation time in seconds
+	 * @param simulationTime
+	 */
 	void setSimulationTime(double simulationTime);
+
+	/**
+	 * Gets simulation time in seconds
+	 * @return
+	 */
 	double getSimulationTime() const;
 
+	/**
+	 * Sets simulation time step in seconds
+	 * @param granularity
+	 */
 	void setGranularity(double granularity);
+
+	/**
+	 * Gets simulation time step in seconds
+	 * @return
+	 */
 	double getGranularity() const;
 
 private:
 
+	/**
+	 * Simulation time in seconds
+	 */
 	double simulationTime_;
+
+	/**
+	 * Simulation time step in seconds
+	 */
 	double granularity_;
 
 private:
 
+	/**
+	 * Creates velocity vector using tf::Transform
+	 * @param linearVelocity
+	 * @param angularVelocity
+	 * @param timeStep
+	 * @return
+	 */
 	tf::Transform createVelocityTransform(double linearVelocity,
 			double angularVelocity, double timeStep) const;
 

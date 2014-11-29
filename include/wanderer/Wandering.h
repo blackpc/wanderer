@@ -30,43 +30,47 @@
 #define INCLUDE_WANDERER_WANDERING_H_
 
 
-#include <iostream>
+#include <time.h>
 
-#include <ros/ros.h>
-#include <sensor_msgs/LaserScan.h>
-#include <geometry_msgs/Twist.h>
+#include <boost/thread.hpp>
+#include <boost/foreach.hpp>
+
+#include <wanderer/CostMap.h>
+#include <wanderer/LaserScanDataSource.h>
+#include <wanderer/TrajectorySimulator.h>
+#include <wanderer/SimpleTrajectoryMatcher.h>
 
 
 using namespace std;
+using namespace cv;
+
+
+#define foreach BOOST_FOREACH
 
 
 /*
- *
+ * Simple wandering algorithm
  */
 class Wandering {
 
 public:
 
-	Wandering();
+	Wandering(double minFrontDistance, double linearVelocity, double angularVelocity);
 
 public:
 
-	void start();
-	void stop();
+	void spin() const;
 
 private:
 
-	void scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan);
+	Trajectory::VectorPtr createTrajectories(
+			double simulationTime, double granularity) const;
 
 private:
 
-	bool isStarted_;
-
-	string fixedFrame_;
-	string baseFrame_;
-
-	ros::Subscriber scanSubscriber_;
-	ros::Publisher velocityPublisher_;
+	double minFrontDistance_;
+	double linearVelocity_;
+	double angularVelocity_;
 
 };
 

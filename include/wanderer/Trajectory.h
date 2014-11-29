@@ -35,6 +35,7 @@
 #include <boost/foreach.hpp>
 
 #include <nav_msgs/Path.h>
+#include <geometry_msgs/Twist.h>
 #include <tf/tf.h>
 
 
@@ -53,7 +54,8 @@ public:
 
 	typedef boost::shared_ptr<Trajectory> Ptr;
 	typedef boost::shared_ptr<Trajectory const> ConstPtr;
-	typedef vector<Trajectory> Vector;
+	typedef vector<Trajectory::Ptr> Vector;
+	typedef boost::shared_ptr<Vector> VectorPtr;
 
 public:
 
@@ -92,18 +94,33 @@ public:
 
 	void clearPath();
 
-	void setScore(double score);
-	double getScore() const;
-
+	/**
+	 * Sets weight
+	 * @param weight Value in range [0, 1]
+	 */
 	void setWeight(double weight);
+
+	/**
+	 * Gets the weight
+	 * @return
+	 */
 	double getWeight() const;
 
 	double getLinearVelocity() const;
 	double getAngularVelocity() const;
 
+	void setVelocities(double linear, double angular);
+
+	geometry_msgs::Twist::Ptr getTwistMessage() const;
+
+	/**
+	 * Rotates all path by specified angle (radians)
+	 * @param angle
+	 */
+	void rotate(double angle);
+
 private:
 
-	double score_;
 	double weight_;
 	nav_msgs::Path::Ptr path_;
 

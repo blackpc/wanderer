@@ -29,7 +29,7 @@
 #include <wanderer/Trajectory.h>
 
 Trajectory::Trajectory(double linearVelocity, double angularVelocity, double weight)
-	: score_(0), weight_(weight), linearVelocity_(linearVelocity), angularVelocity_(angularVelocity) {
+	: weight_(weight), linearVelocity_(linearVelocity), angularVelocity_(angularVelocity) {
 	path_ = nav_msgs::Path::Ptr(new nav_msgs::Path());
 }
 
@@ -83,24 +83,46 @@ void Trajectory::clearPath() {
 	path_->poses.clear();
 }
 
-void Trajectory::setScore(double score) {
-	score_ = score;
-}
-
-double Trajectory::getScore() const {
-	return score_;
-}
-
 double Trajectory::getLinearVelocity() const {
 	return linearVelocity_;
 }
 
 void Trajectory::setWeight(double weight) {
+	if (weight < 0 || weight > 1)
+		throw new std::invalid_argument("weight");
+
+	weight_ = weight;
 }
 
 double Trajectory::getWeight() const {
+	return weight_;
 }
 
 double Trajectory::getAngularVelocity() const {
 	return angularVelocity_;
+}
+
+geometry_msgs::Twist::Ptr Trajectory::getTwistMessage() const {
+	geometry_msgs::Twist::Ptr message(new geometry_msgs::Twist());
+	message->linear.x = getLinearVelocity();
+	message->angular.z = getAngularVelocity();
+	return message;
+}
+
+void Trajectory::rotate(double angle) {
+	tf::Stamped<tf::Transform> rotationTf;
+	rotationTf.setOrigin(tf::Vector3(0, 0, 0));
+	rotationTf.setRotation(tf::createQuaternionFromYaw(angle));
+
+	foreach(geometry_msgs::PoseStamped& pose, path_->poses) {
+		tf::Stamped<tf::Transform> tf;
+		tf::poseStampedMsgToTF(pose, tf);
+		tf.setData(rotationTf * tf);
+		tf::poseStampedTFToMsg(tf, pose);
+	}
+}
+
+void Trajectory::setVelocities(double linear, double angular) {
+	linearVelocity_ = linear;
+	angularVelocity_ = angular;
 }

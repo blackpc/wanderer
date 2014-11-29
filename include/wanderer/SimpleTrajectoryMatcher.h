@@ -1,5 +1,5 @@
 /**
- * Filename: TrajectoryMatch.cpp
+ * Filename: SimpleTrajectoryMatcher.h
  *   Author: Igor Makhtes
  *     Date: Nov 29, 2014
  *
@@ -26,19 +26,27 @@
  * THE SOFTWARE.
  */
 
-#include <wanderer/TrajectoryMatch.h>
+#ifndef INCLUDE_WANDERER_SIMPLETRAJECTORYMATCHER_H_
+#define INCLUDE_WANDERER_SIMPLETRAJECTORYMATCHER_H_
 
-TrajectoryMatch::TrajectoryMatch(Trajectory::Ptr& trajectory, double score)
-	: trajectory_(trajectory), score_(score) {
+#include <wanderer/ITrajectoryMatcher.h>
 
-	if (score_ < -1 || score_ > 1)
-		throw new std::invalid_argument("score");
-}
+/*
+ * Simple trajectory matcher: the score of each
+ * trajectory depends on number of unoccupied cells under the path
+ */
+class SimpleTrajectoryMatcher : public ITrajectoryMatcher {
 
-double TrajectoryMatch::getScore() const {
-	return score_;
-}
+public:
 
-Trajectory::Ptr TrajectoryMatch::getTrajectory() const {
-	return trajectory_;
-}
+	SimpleTrajectoryMatcher();
+
+	virtual ~SimpleTrajectoryMatcher();
+
+public:
+
+	virtual TrajectoryMatch::Ptr match(CostMap& costMap, Trajectory::Ptr trajectory) const;
+
+};
+
+#endif /* INCLUDE_WANDERER_SIMPLETRAJECTORYMATCHER_H_ */

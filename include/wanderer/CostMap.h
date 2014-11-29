@@ -86,6 +86,13 @@ public:
 	 */
 	void clearMap();
 
+	/**
+	 * Returns the value of cost map cell, located in specified position
+	 * @param pose Position should be in cost map's frame
+	 * @return Cell value: Unknown(-1), Free(0), Occupied(1..100)
+	 */
+	char getCellValue(const geometry_msgs::Pose& pose) const;
+
 protected:
 
 	/**
@@ -163,6 +170,17 @@ protected:
 		return cv::Point(
 				(x - occupancyGrid_->info.origin.position.x) / occupancyGrid_->info.resolution,
 				(y - occupancyGrid_->info.origin.position.y) / occupancyGrid_->info.resolution);
+	}
+
+	/**
+	 * Checks whether provided pixel within the map bounds
+	 * @param pixel
+	 * @return If the point within the map bounds - the value returned,
+	 * 		   otherwise Unknown(-1)
+	 */
+	inline bool isInBounds(const cv::Point& pixel) const {
+		return pixel.x >= 0 && pixel.x < cvMatrix_.cols &&
+				pixel.y >= 0 && pixel.y < cvMatrix_.rows;
 	}
 };
 

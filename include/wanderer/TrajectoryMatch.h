@@ -49,21 +49,21 @@ public:
 
 public:
 
-	struct TrajectoryMatchComparator {
+	struct TrajectoryMatchCostComparator {
 		bool operator() (const TrajectoryMatch& first,
 				const TrajectoryMatch& second) const {
-			return first.getScore() < second.getScore();
+			return first.getScore() > second.getScore();
 		}
 
 		bool operator() (const TrajectoryMatch::Ptr& first,
 				const TrajectoryMatch::Ptr& second) const {
-			return first->getScore() < second->getScore();
+			return first->getScore() > second->getScore();
 		}
 	};
 
 public:
 
-	typedef multiset<TrajectoryMatch::Ptr, TrajectoryMatch::TrajectoryMatchComparator> Set;
+	typedef multiset<TrajectoryMatch::Ptr, TrajectoryMatch::TrajectoryMatchCostComparator> Set;
 	typedef boost::shared_ptr<Set> SetPtr;
 
 public:
@@ -96,5 +96,6 @@ private:
 	Trajectory::Ptr trajectory_;
 
 };
+
 
 #endif /* INCLUDE_WANDERER_TRAJECTORYMATCH_H_ */
