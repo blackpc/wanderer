@@ -35,10 +35,10 @@
 #include <boost/thread.hpp>
 #include <boost/foreach.hpp>
 
-#include <wanderer/CostMap.h>
-#include <wanderer/LaserScanDataSource.h>
-#include <wanderer/TrajectorySimulator.h>
-#include <wanderer/SimpleTrajectoryMatcher.h>
+#include <wanderer/costmap/CostMap.h>
+#include <wanderer/costmap/datasource/LaserScanDataSource.h>
+#include <wanderer/trajectory/simulator/TrajectorySimulator.h>
+#include <wanderer/trajectory/matcher/SimpleTrajectoryMatcher.h>
 
 
 using namespace std;

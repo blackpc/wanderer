@@ -90,9 +90,16 @@ public:
 	 * Returns path with a default frame id and old time stamp
 	 * @return
 	 */
-	nav_msgs::Path::Ptr getPath() const;
+	inline nav_msgs::Path::Ptr getPath() const {
+		return path_;
+	}
 
-	void clearPath();
+	/**
+	 * Removes all points from the path
+	 */
+	inline void clearPath() {
+		path_->poses.clear();
+	}
 
 	/**
 	 * Sets weight
@@ -104,13 +111,24 @@ public:
 	 * Gets the weight
 	 * @return
 	 */
-	double getWeight() const;
+	inline double getWeight() const {
+		return weight_;
+	}
 
-	double getLinearVelocity() const;
-	double getAngularVelocity() const;
+	inline double getLinearVelocity() const {
+		return linearVelocity_;
+	}
+
+	inline double getAngularVelocity() const {
+		return angularVelocity_;
+	}
 
 	void setVelocities(double linear, double angular);
 
+	/**
+	 * Returns a geometry_msgs::Twist message containing linear and angular velocities
+	 * @return
+	 */
 	geometry_msgs::Twist::Ptr getTwistMessage() const;
 
 	/**
@@ -121,11 +139,11 @@ public:
 
 private:
 
-	double weight_;
 	nav_msgs::Path::Ptr path_;
 
 	double linearVelocity_;
 	double angularVelocity_;
+	double weight_;
 
 };
 

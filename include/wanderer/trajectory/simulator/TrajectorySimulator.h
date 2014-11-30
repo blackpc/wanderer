@@ -32,7 +32,7 @@
 
 #include <tf/tf.h>
 
-#include <wanderer/Trajectory.h>
+#include <wanderer/trajectory/Trajectory.h>
 
 
 /*
@@ -52,25 +52,33 @@ public:
 	 * Sets simulation time in seconds
 	 * @param simulationTime
 	 */
-	void setSimulationTime(double simulationTime);
+	inline void setSimulationTime(double simulationTime) {
+		simulationTime_ = simulationTime;
+	}
 
 	/**
 	 * Gets simulation time in seconds
 	 * @return
 	 */
-	double getSimulationTime() const;
+	inline double getSimulationTime() const {
+		return simulationTime_;
+	}
 
 	/**
 	 * Sets simulation time step in seconds
 	 * @param granularity
 	 */
-	void setGranularity(double granularity);
+	inline void setGranularity(double granularity) {
+		granularity_ = granularity;
+	}
 
 	/**
 	 * Gets simulation time step in seconds
 	 * @return
 	 */
-	double getGranularity() const;
+	inline double getGranularity() const {
+		return granularity_;
+	}
 
 private:
 

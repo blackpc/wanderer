@@ -1,7 +1,7 @@
 /**
- * Filename: SimpleTrajectoryMatcher.h
+ * Filename: ICostMapDataSource.h
  *   Author: Igor Makhtes
- *     Date: Nov 29, 2014
+ *     Date: Nov 28, 2014
  *
  * The MIT License (MIT)
  *
@@ -26,27 +26,68 @@
  * THE SOFTWARE.
  */
 
-#ifndef INCLUDE_WANDERER_SIMPLETRAJECTORYMATCHER_H_
-#define INCLUDE_WANDERER_SIMPLETRAJECTORYMATCHER_H_
+#ifndef INCLUDE_WANDERER_ICOSTMAPDATASOURCE_H_
+#define INCLUDE_WANDERER_ICOSTMAPDATASOURCE_H_
 
-#include <wanderer/ITrajectoryMatcher.h>
+
+#include <string>
+
+#include <boost/function.hpp>
+
+#include <ros/ros.h>
+
+
+using namespace std;
+
+
+class CostMap;
+
 
 /*
- * Simple trajectory matcher: the score of each
- * trajectory depends on number of unoccupied cells under the path
+ * Data source interface for CostMap
  */
-class SimpleTrajectoryMatcher : public ITrajectoryMatcher {
+class ICostMapDataSource {
+
+	friend CostMap;
 
 public:
 
-	SimpleTrajectoryMatcher();
-
-	virtual ~SimpleTrajectoryMatcher();
+	virtual ~ICostMapDataSource() { }
 
 public:
 
-	virtual TrajectoryMatch::Ptr match(CostMap& costMap, Trajectory::Ptr trajectory) const;
+	/**
+	 * Name of this data source
+	 * @return
+	 */
+	virtual string getName() const = 0;
+
+	/**
+	 * Clears cost map
+	 */
+	inline void clearMap() const {
+		clearMapCallback();
+	}
+
+	/**
+	 * Publishes a point to the cost map
+	 * @param x
+	 * @param y
+	 * @param frameId
+	 * @param stamp
+	 */
+	inline void emitPoint(double x, double y, const string& frameId, const ros::Time& stamp) const {
+		emitPointCallback(x, y, boost::ref(frameId), boost::ref(stamp));
+	}
+
+private:
+
+	typedef boost::function<void()> ClearMapCallback;
+	typedef boost::function<void(double, double, const string&, const ros::Time&)> EmitPointCallback;
+
+	ClearMapCallback clearMapCallback;
+	EmitPointCallback emitPointCallback;
 
 };
 
-#endif /* INCLUDE_WANDERER_SIMPLETRAJECTORYMATCHER_H_ */
+#endif /* INCLUDE_WANDERER_ICOSTMAPDATASOURCE_H_ */

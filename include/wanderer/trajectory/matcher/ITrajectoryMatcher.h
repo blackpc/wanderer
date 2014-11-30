@@ -30,8 +30,9 @@
 #define INCLUDE_WANDERER_ITRAJECTORYMATCHER_H_
 
 
-#include <wanderer/CostMap.h>
-#include <wanderer/TrajectoryMatch.h>
+#include <wanderer/costmap/CostMap.h>
+#include <wanderer/trajectory/matcher/TrajectoryMatch.h>
+
 
 /*
  * Trajectory matcher interface, used to evaluate trajectories against a cost map
@@ -50,7 +51,7 @@ public:
 	 * @param trajectory
 	 * @return
 	 */
-	virtual TrajectoryMatch::Ptr match(CostMap& costMap, Trajectory::Ptr trajectory) const = 0;
+	virtual TrajectoryMatch::Ptr match(const CostMap& costMap, const Trajectory::Ptr& trajectory) const = 0;
 
 	/**
 	 * Evaluate number of trajectories and returns a sorted set of matches by score
@@ -58,7 +59,7 @@ public:
 	 * @param trajectories
 	 * @return
 	 */
-	virtual TrajectoryMatch::SetPtr match(CostMap& costMap, Trajectory::VectorPtr trajectories) const {
+	virtual inline TrajectoryMatch::SetPtr match(const CostMap& costMap, const Trajectory::VectorPtr& trajectories) const {
 		TrajectoryMatch::SetPtr trajectoryMatchSet(new TrajectoryMatch::Set());
 
 		for (int i = 0; i < trajectories->size(); ++i) {

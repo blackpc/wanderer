@@ -26,19 +26,12 @@
  * THE SOFTWARE.
  */
 
-#include <wanderer/TrajectoryMatch.h>
+#include <wanderer/trajectory/matcher/TrajectoryMatch.h>
 
-TrajectoryMatch::TrajectoryMatch(Trajectory::Ptr& trajectory, double score)
+TrajectoryMatch::TrajectoryMatch(const Trajectory::Ptr& trajectory, double score)
 	: trajectory_(trajectory), score_(score) {
 
 	if (score_ < -1 || score_ > 1)
 		throw new std::invalid_argument("score");
 }
 
-double TrajectoryMatch::getScore() const {
-	return score_;
-}
-
-Trajectory::Ptr TrajectoryMatch::getTrajectory() const {
-	return trajectory_;
-}

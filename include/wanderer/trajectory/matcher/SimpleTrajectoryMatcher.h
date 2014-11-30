@@ -1,7 +1,7 @@
 /**
- * Filename: LaserScanDataSource.h
+ * Filename: SimpleTrajectoryMatcher.h
  *   Author: Igor Makhtes
- *     Date: Nov 28, 2014
+ *     Date: Nov 29, 2014
  *
  * The MIT License (MIT)
  *
@@ -26,38 +26,27 @@
  * THE SOFTWARE.
  */
 
-#ifndef INCLUDE_WANDERER_LASERSCANDATASOURCE_H_
-#define INCLUDE_WANDERER_LASERSCANDATASOURCE_H_
+#ifndef INCLUDE_WANDERER_SIMPLETRAJECTORYMATCHER_H_
+#define INCLUDE_WANDERER_SIMPLETRAJECTORYMATCHER_H_
 
-
-#include <sensor_msgs/LaserScan.h>
-
-#include <wanderer/ICostMapDataSource.h>
-
+#include <wanderer/trajectory/matcher/ITrajectoryMatcher.h>
 
 /*
- * LaserScan subscriber data source for cost map
+ * Simple trajectory matcher: the score of each
+ * trajectory depends on number of unoccupied cells under the path
  */
-class LaserScanDataSource : public ICostMapDataSource {
+class SimpleTrajectoryMatcher : public ITrajectoryMatcher {
 
 public:
 
-	LaserScanDataSource(ros::NodeHandle& nodeHande, const string& topic);
+	SimpleTrajectoryMatcher();
+
+	virtual ~SimpleTrajectoryMatcher();
 
 public:
 
-	virtual string getName() const {
-		return "LaserScan";
-	}
-
-private:
-
-	ros::Subscriber laserScanSubscriber_;
-
-private:
-
-	void laserScanCallback(const sensor_msgs::LaserScan::ConstPtr& scan);
+	virtual TrajectoryMatch::Ptr match(const CostMap& costMap, const Trajectory::Ptr& trajectory) const;
 
 };
 
-#endif /* INCLUDE_WANDERER_LASERSCANDATASOURCE_H_ */
+#endif /* INCLUDE_WANDERER_SIMPLETRAJECTORYMATCHER_H_ */

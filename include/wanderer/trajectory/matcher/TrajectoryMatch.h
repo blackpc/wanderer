@@ -1,7 +1,7 @@
 /**
- * Filename: ICostMapDataSource.h
+ * Filename: TrajectoryMatch.h
  *   Author: Igor Makhtes
- *     Date: Nov 28, 2014
+ *     Date: Nov 29, 2014
  *
  * The MIT License (MIT)
  *
@@ -26,68 +26,80 @@
  * THE SOFTWARE.
  */
 
-#ifndef INCLUDE_WANDERER_ICOSTMAPDATASOURCE_H_
-#define INCLUDE_WANDERER_ICOSTMAPDATASOURCE_H_
+#ifndef INCLUDE_WANDERER_TRAJECTORYMATCH_H_
+#define INCLUDE_WANDERER_TRAJECTORYMATCH_H_
 
 
-#include <string>
+#include <set>
 
-#include <boost/function.hpp>
-
-#include <ros/ros.h>
+#include <wanderer/trajectory/Trajectory.h>
 
 
 using namespace std;
 
 
-class CostMap;
-
-
 /*
- * Data source interface for CostMap
+ * Holds trajectory match result
  */
-class ICostMapDataSource {
-
-	friend CostMap;
+class TrajectoryMatch {
 
 public:
 
-	virtual ~ICostMapDataSource() { }
+	typedef boost::shared_ptr<TrajectoryMatch> Ptr;
+
+public:
+
+	struct TrajectoryMatchCostComparator {
+		bool operator() (const TrajectoryMatch& first,
+				const TrajectoryMatch& second) const {
+			return first.getScore() > second.getScore();
+		}
+
+		bool operator() (const TrajectoryMatch::Ptr& first,
+				const TrajectoryMatch::Ptr& second) const {
+			return first->getScore() > second->getScore();
+		}
+	};
+
+public:
+
+	typedef multiset<TrajectoryMatch::Ptr, TrajectoryMatch::TrajectoryMatchCostComparator> Set;
+	typedef boost::shared_ptr<Set> SetPtr;
 
 public:
 
 	/**
-	 * Name of this data source
+	 * Constructs trajectory match
+	 * @param trajectory
+	 * @param score
+	 */
+	TrajectoryMatch(const Trajectory::Ptr& trajectory, double score);
+
+public:
+
+	/**
+	 * Gets score of this trajectory
 	 * @return
 	 */
-	virtual string getName() const = 0;
-
-	/**
-	 * Clears cost map
-	 */
-	inline void clearMap() const {
-		clearMapCallback();
+	inline double getScore() const {
+		return score_;
 	}
 
 	/**
-	 * Publishes a point to the cost map
-	 * @param x
-	 * @param y
-	 * @param frameId
-	 * @param stamp
+	 * Gets trajectory
+	 * @return
 	 */
-	inline void emitPoint(double x, double y, const string& frameId, ros::Time stamp) const {
-		emitPointCallback(x, y, boost::ref(frameId), stamp);
+	inline Trajectory::Ptr getTrajectory() const {
+		return trajectory_;
 	}
 
 private:
 
-	typedef boost::function<void()> ClearMapCallback;
-	typedef boost::function<void(double, double, const string&, ros::Time)> EmitPointCallback;
+	const double score_;
 
-	ClearMapCallback clearMapCallback;
-	EmitPointCallback emitPointCallback;
+	const Trajectory::Ptr trajectory_;
 
 };
 
-#endif /* INCLUDE_WANDERER_ICOSTMAPDATASOURCE_H_ */
+
+#endif /* INCLUDE_WANDERER_TRAJECTORYMATCH_H_ */

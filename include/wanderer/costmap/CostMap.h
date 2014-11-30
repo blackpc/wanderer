@@ -38,7 +38,7 @@
 #include <tf/transform_listener.h>
 #include <nav_msgs/OccupancyGrid.h>
 
-#include <wanderer/ICostMapDataSource.h>
+#include <wanderer/costmap/datasource/ICostMapDataSource.h>
 
 
 using namespace std;
@@ -73,18 +73,24 @@ public:
 	 * Return occupancy grid
 	 * @return occupancy grid
 	 */
-	nav_msgs::OccupancyGrid::ConstPtr getOccupancyGrid() const;
+	inline nav_msgs::OccupancyGrid::ConstPtr getOccupancyGrid() const {
+		return boost::const_pointer_cast<nav_msgs::OccupancyGrid const>(occupancyGrid_);
+	}
 
 	/**
 	 * Returns cv::Mat of the cost map
 	 * @return
 	 */
-	cv::Mat getCvMatrix() const;
+	inline cv::Mat getCvMatrix() const {
+		return cvMatrix_;
+	}
 
 	/**
 	 * Set all cells of the map to unknown(-1)
 	 */
-	void clearMap();
+	inline void clearMap() {
+		memset(occupancyGrid_->data.data(), -1, occupancyGrid_->data.size());
+	}
 
 	/**
 	 * Returns the value of cost map cell, located in specified position
@@ -140,7 +146,9 @@ protected:
 	/**
 	 * Clear cost map callback from ICostMapDataSource
 	 */
-	void clearMapCallback();
+	inline void clearMapCallback() {
+		clearMap();
+	}
 
 	/**
 	 * New point callback from ICostMapDataSource
@@ -149,7 +157,7 @@ protected:
 	 * @param frameId frame id of the coordinates
 	 * @param stamp time stamp
 	 */
-	void addPointCallback(double x, double y, const string& frameId, ros::Time stamp);
+	void addPointCallback(double x, double y, const string& frameId, const ros::Time& stamp);
 
 	/**
 	 * Convert local map coordinates to pixels coordinates
@@ -168,8 +176,10 @@ protected:
 	 */
 	inline cv::Point localCoordinatesToPixel(double x, double y) const {
 		return cv::Point(
-				(x - occupancyGrid_->info.origin.position.x) / occupancyGrid_->info.resolution,
-				(y - occupancyGrid_->info.origin.position.y) / occupancyGrid_->info.resolution);
+				(x - occupancyGrid_->info.origin.position.x) /
+					occupancyGrid_->info.resolution,
+				(y - occupancyGrid_->info.origin.position.y) /
+					occupancyGrid_->info.resolution);
 	}
 
 	/**

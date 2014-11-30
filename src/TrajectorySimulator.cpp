@@ -26,7 +26,7 @@
  * THE SOFTWARE.
  */
 
-#include <wanderer/TrajectorySimulator.h>
+#include <wanderer/trajectory/simulator/TrajectorySimulator.h>
 
 TrajectorySimulator::TrajectorySimulator(double simulationTime, double granularity)
 	: simulationTime_(simulationTime), granularity_(granularity)
@@ -53,22 +53,6 @@ Trajectory::Ptr TrajectorySimulator::simulate(double linearVelocity,
 	}
 
 	return trajectory;
-}
-
-void TrajectorySimulator::setSimulationTime(double simulationTime) {
-	simulationTime_ = simulationTime;
-}
-
-double TrajectorySimulator::getSimulationTime() const {
-	return simulationTime_;
-}
-
-void TrajectorySimulator::setGranularity(double granularity) {
-	granularity_ = granularity;
-}
-
-double TrajectorySimulator::getGranularity() const {
-	return granularity_;
 }
 
 tf::Transform TrajectorySimulator::createVelocityTransform(

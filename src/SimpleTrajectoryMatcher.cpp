@@ -26,7 +26,7 @@
  * THE SOFTWARE.
  */
 
-#include <wanderer/SimpleTrajectoryMatcher.h>
+#include <wanderer/trajectory/matcher/SimpleTrajectoryMatcher.h>
 
 SimpleTrajectoryMatcher::SimpleTrajectoryMatcher() {
 }
@@ -34,10 +34,10 @@ SimpleTrajectoryMatcher::SimpleTrajectoryMatcher() {
 SimpleTrajectoryMatcher::~SimpleTrajectoryMatcher() {
 }
 
-TrajectoryMatch::Ptr SimpleTrajectoryMatcher::match(CostMap& costMap,
-		Trajectory::Ptr trajectory) const {
+TrajectoryMatch::Ptr SimpleTrajectoryMatcher::match(const CostMap& costMap,
+		const Trajectory::Ptr& trajectory) const {
 
-	const nav_msgs::Path::Ptr path = trajectory->getPath();
+	const nav_msgs::Path::Ptr& path = trajectory->getPath();
 
 	/**
 	 * Score ranges from -1 (Unknown) to 100 (definitely occupied)

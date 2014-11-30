@@ -26,7 +26,7 @@
  * THE SOFTWARE.
  */
 
-#include <wanderer/Trajectory.h>
+#include <wanderer/trajectory/Trajectory.h>
 
 Trajectory::Trajectory(double linearVelocity, double angularVelocity, double weight)
 	: weight_(weight), linearVelocity_(linearVelocity), angularVelocity_(angularVelocity) {
@@ -75,31 +75,11 @@ nav_msgs::Path::Ptr Trajectory::getPath(bool updateStamp, const string& frameId)
 	return path_;
 }
 
-nav_msgs::Path::Ptr Trajectory::getPath() const {
-	return path_;
-}
-
-void Trajectory::clearPath() {
-	path_->poses.clear();
-}
-
-double Trajectory::getLinearVelocity() const {
-	return linearVelocity_;
-}
-
 void Trajectory::setWeight(double weight) {
 	if (weight < 0 || weight > 1)
 		throw new std::invalid_argument("weight");
 
 	weight_ = weight;
-}
-
-double Trajectory::getWeight() const {
-	return weight_;
-}
-
-double Trajectory::getAngularVelocity() const {
-	return angularVelocity_;
 }
 
 geometry_msgs::Twist::Ptr Trajectory::getTwistMessage() const {

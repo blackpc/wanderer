@@ -26,7 +26,7 @@
  * THE SOFTWARE.
  */
 
-#include <wanderer/CostMap.h>
+#include <wanderer/costmap/CostMap.h>
 
 CostMap::CostMap(ICostMapDataSource* dataSource, double inflationRadius, double mapWidth,
 		double mapHeight, double resolution, const string& frameId)
@@ -40,14 +40,6 @@ CostMap::CostMap(ICostMapDataSource* dataSource, double inflationRadius, double 
 			boost::bind(&CostMap::addPointCallback, this, _1, _2, _3, _4);
 
 	printSummary();
-}
-
-nav_msgs::OccupancyGrid::ConstPtr CostMap::getOccupancyGrid() const {
-	return boost::const_pointer_cast<nav_msgs::OccupancyGrid const>(occupancyGrid_);
-}
-
-cv::Mat CostMap::getCvMatrix() const {
-	return cvMatrix_;
 }
 
 void CostMap::printSummary() const {
@@ -102,14 +94,6 @@ void CostMap::createOccupancyGrid(double mapWidth,
 
 }
 
-void CostMap::clearMapCallback() {
-	clearMap();
-}
-
-void CostMap::clearMap() {
-	memset(occupancyGrid_->data.data(), -1, occupancyGrid_->data.size());
-}
-
 char CostMap::getCellValue(const geometry_msgs::Pose& pose) const {
 	cv::Point pixel = localCoordinatesToPixel(pose.position.x, pose.position.y);
 
@@ -122,7 +106,7 @@ char CostMap::getCellValue(const geometry_msgs::Pose& pose) const {
 	return -1;
 }
 
-void CostMap::addPointCallback(double x, double y, const string& frameId, ros::Time stamp) {
+void CostMap::addPointCallback(double x, double y, const string& frameId, const ros::Time& stamp) {
 	tf::StampedTransform dataSourceToMapTransform;
 
 	try {
@@ -139,9 +123,6 @@ void CostMap::addPointCallback(double x, double y, const string& frameId, ros::T
 
 	if (pixel.x >= 0 && pixel.x < cvMatrix_.cols &&
 			pixel.y >= 0 && pixel.y < cvMatrix_.rows) {
-
-//		cv::line(cvMatrix_, cv::Point(occupancyGrid_->info.width / 2, occupancyGrid_->info.height / 2), pixel, 0, 1);
 		cv::circle(cvMatrix_, pixel, inflationRadius_ / occupancyGrid_->info.resolution, 100, -1);
-
 	}
 }

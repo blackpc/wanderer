@@ -1,5 +1,5 @@
 /**
- * Filename: LaserScanDataSource.cpp
+ * Filename: LaserScanDataSource.h
  *   Author: Igor Makhtes
  *     Date: Nov 28, 2014
  *
@@ -26,27 +26,38 @@
  * THE SOFTWARE.
  */
 
-#include <wanderer/costmap/datasource/LaserScanDataSource.h>
+#ifndef INCLUDE_WANDERER_LASERSCANDATASOURCE_H_
+#define INCLUDE_WANDERER_LASERSCANDATASOURCE_H_
 
-LaserScanDataSource::LaserScanDataSource(ros::NodeHandle& nodeHandle,
-		const string& topic) {
 
-	laserScanSubscriber_ = nodeHandle.subscribe(
-			topic, 1, &LaserScanDataSource::laserScanCallback, this);
+#include <sensor_msgs/LaserScan.h>
 
-}
+#include <wanderer/costmap/datasource/ICostMapDataSource.h>
 
-void LaserScanDataSource::laserScanCallback(
-		const sensor_msgs::LaserScan::ConstPtr& scan)
-{
-	ICostMapDataSource::clearMap();
 
-	for (int i = 0; i < scan->ranges.size(); ++i) {
-		if (scan->ranges[i] <= scan->range_max && scan->ranges[i] >= scan->range_min) {
-			double x = cos(scan->angle_min + scan->angle_increment * i) * scan->ranges[i];
-			double y = sin(scan->angle_min + scan->angle_increment * i) * scan->ranges[i];
+/*
+ * LaserScan subscriber data source for cost map
+ */
+class LaserScanDataSource : public ICostMapDataSource {
 
-			ICostMapDataSource::emitPoint(x, y, scan->header.frame_id, scan->header.stamp);
-		}
+public:
+
+	LaserScanDataSource(ros::NodeHandle& nodeHande, const string& topic);
+
+public:
+
+	virtual inline string getName() const {
+		return "LaserScan";
 	}
-}
+
+private:
+
+	ros::Subscriber laserScanSubscriber_;
+
+private:
+
+	void laserScanCallback(const sensor_msgs::LaserScan::ConstPtr& scan);
+
+};
+
+#endif /* INCLUDE_WANDERER_LASERSCANDATASOURCE_H_ */
