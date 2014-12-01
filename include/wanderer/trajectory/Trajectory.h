@@ -35,9 +35,9 @@
 #include <boost/foreach.hpp>
 
 #include <nav_msgs/Path.h>
-#include <geometry_msgs/Twist.h>
 #include <tf/tf.h>
 
+#include <wanderer/trajectory/simulator/models/IMotionModel.h>
 
 using namespace std;
 
@@ -59,7 +59,7 @@ public:
 
 public:
 
-	Trajectory(double linearVelocity, double angularVelocity, double weight = 1);
+	Trajectory(const IMotionModel* motionModel, double weight = 1);
 
 public:
 
@@ -115,21 +115,14 @@ public:
 		return weight_;
 	}
 
-	inline double getLinearVelocity() const {
-		return linearVelocity_;
+	inline const IMotionModel* getMotionModel() const {
+		return motionModel_.get();
 	}
 
-	inline double getAngularVelocity() const {
-		return angularVelocity_;
+	template <class MotionModelType>
+	inline const MotionModelType* getMotionModelAs() const {
+		return (MotionModelType*)getMotionModel();
 	}
-
-	void setVelocities(double linear, double angular);
-
-	/**
-	 * Returns a geometry_msgs::Twist message containing linear and angular velocities
-	 * @return
-	 */
-	geometry_msgs::Twist::Ptr getTwistMessage() const;
 
 	/**
 	 * Rotates all path by specified angle (radians)
@@ -141,9 +134,9 @@ private:
 
 	nav_msgs::Path::Ptr path_;
 
-	double linearVelocity_;
-	double angularVelocity_;
 	double weight_;
+
+	boost::shared_ptr<IMotionModel> motionModel_;
 
 };
 

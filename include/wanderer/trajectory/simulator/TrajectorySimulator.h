@@ -33,6 +33,7 @@
 #include <tf/tf.h>
 
 #include <wanderer/trajectory/Trajectory.h>
+#include <wanderer/trajectory/simulator/models/IMotionModel.h>
 
 
 /*
@@ -46,7 +47,13 @@ public:
 
 public:
 
-	Trajectory::Ptr simulate(double linearVelocity, double angularVelocity) const;
+	/**
+	 * Simulates trajectory using specified motion model
+	 * @param model Motion model pointer
+	 * @warning DO NOT delete the model pointer manually, it will be automatically deleted with trajectories
+	 * @return
+	 */
+	Trajectory::Ptr simulate(const IMotionModel* model) const;
 
 	/**
 	 * Sets simulation time in seconds

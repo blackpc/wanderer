@@ -33,27 +33,50 @@ TrajectorySimulator::TrajectorySimulator(double simulationTime, double granulari
 {
 }
 
-Trajectory::Ptr TrajectorySimulator::simulate(double linearVelocity,
-		double angularVelocity) const
+Trajectory::Ptr TrajectorySimulator::simulate(const IMotionModel* model) const
 {
-	Trajectory::Ptr trajectory(new Trajectory(linearVelocity, angularVelocity));
-
-	int steps = simulationTime_ / granularity_;
-	float timeStep = granularity_;
+	Trajectory::Ptr trajectory(new Trajectory(model));
 
 	tf::Transform position;
 	position.setIdentity();
 
-	tf::Transform velocityVector =
-			createVelocityTransform(linearVelocity, angularVelocity, timeStep);
+	int steps = simulationTime_ / granularity_;
+	float timeStep = granularity_;
+
+	tf::Transform velocityVector = model->simulateStep(timeStep);
 
 	for (int step = 0; step < steps; ++step) {
 		position = position * velocityVector;
 		trajectory->addPosition(position.getOrigin(), position.getRotation());
+
+		if (!model->isConstantMotion())
+			velocityVector = model->simulateStep(timeStep);
 	}
 
 	return trajectory;
 }
+
+//Trajectory::Ptr TrajectorySimulator::simulate(double linearVelocity,
+//		double angularVelocity) const
+//{
+//	Trajectory::Ptr trajectory(new Trajectory(NULL));
+//
+//	int steps = simulationTime_ / granularity_;
+//	float timeStep = granularity_;
+//
+//	tf::Transform position;
+//	position.setIdentity();
+//
+//	tf::Transform velocityVector =
+//			createVelocityTransform(linearVelocity, angularVelocity, timeStep);
+//
+//	for (int step = 0; step < steps; ++step) {
+//		position = position * velocityVector;
+//		trajectory->addPosition(position.getOrigin(), position.getRotation());
+//	}
+//
+//	return trajectory;
+//}
 
 tf::Transform TrajectorySimulator::createVelocityTransform(
 		double linearVelocity, double angularVelocity, double timeStep) const {

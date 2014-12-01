@@ -51,28 +51,11 @@ void Wandering::spin() const {
 	ros::Publisher bestPathPublisher = nodePrivate.advertise<nav_msgs::Path>("/path_best", 1, false);
 	ros::Publisher velocityPublisher = nodePrivate.advertise<geometry_msgs::Twist>("/cmd_vel", 1, false);
 
-	const double simulationTime = minFrontDistance_ / linearVelocity_;
-	TrajectorySimulator trajectorySimulator(simulationTime, 0.025);
-
-	Trajectory::Ptr leftTrajectory = trajectorySimulator.simulate(1, 0);
-	Trajectory::Ptr rightTrajectory = trajectorySimulator.simulate(1, 0);
-	Trajectory::Ptr frontTrajectory = trajectorySimulator.simulate(linearVelocity_, 0);
-
-	leftTrajectory->setWeight(0.1);
-	rightTrajectory->setWeight(0.1);
-	frontTrajectory->setWeight(1);
-
-	leftTrajectory->rotate(M_PI_2);
-	rightTrajectory->rotate(-M_PI_2);
-
-	leftTrajectory->setVelocities(0, angularVelocity_);
-	rightTrajectory->setVelocities(0, -angularVelocity_);
+	Trajectory::VectorPtr trajectories = createTrajectories(2, 0.1);
 
 	ros::Rate rate(10);
 
 	TrajectoryMatch::Ptr bestMatch;
-
-	bool waitForFrontTrajectory = false;
 
 	while (ros::ok()) {
 		ros::spinOnce();
@@ -80,54 +63,15 @@ void Wandering::spin() const {
 		/**
 		 * Evaluate trajectories
 		 */
-		TrajectoryMatch::Ptr frontMatch = trajectoryMatcher->match(costMap, frontTrajectory);
-		TrajectoryMatch::Ptr leftMatch = trajectoryMatcher->match(costMap, leftTrajectory);
-		TrajectoryMatch::Ptr rightMatch = trajectoryMatcher->match(costMap, rightTrajectory);
+		TrajectoryMatch::SetPtr matches = trajectoryMatcher->match(costMap, trajectories);
 
-		if (!waitForFrontTrajectory) {
-
-			/**
-			 * The robot is not turning right now so check all trajectories
-			 */
-			if (frontMatch->getScore() > leftMatch->getScore() &&
-					frontMatch->getScore() > rightMatch->getScore()) {
-				/**
-				 * Best match is the front
-				 */
-				bestMatch = frontMatch;
-			} else {
-
-				/**
-				 * Front is blocked, select best match from right or left
-				 */
-				if (leftMatch->getScore() > rightMatch->getScore())
-					bestMatch = leftMatch;
-				else
-					bestMatch = rightMatch;
-
-				waitForFrontTrajectory = true;
-			}
-
-		} else {
-			/**
-			 * Front was blocked previously, so we'r turning in place to find an open front trajectory
-			 */
-			if (frontMatch->getScore() > 0) {
-				/**
-				 * Check front trajectory, if free, drive straight
-				 */
-				bestMatch = frontMatch;
-				waitForFrontTrajectory = false;
-			}
-		}
-
+		bestMatch = *matches->begin();
 
 		/**
 		 * Publish all paths
 		 */
-		pathPublisher.publish(leftTrajectory->getPath(true, "base_link"));
-		pathPublisher.publish(rightTrajectory->getPath(true, "base_link"));
-		pathPublisher.publish(frontTrajectory->getPath(true, "base_link"));
+		for (int i = 0; i < trajectories->size(); ++i)
+			pathPublisher.publish((*trajectories)[i]->getPath(true, "base_link"));
 
 		/**
 		 * Publish best matched trajectory
@@ -137,7 +81,7 @@ void Wandering::spin() const {
 		/**
 		 * Publish velocity command
 		 */
-		velocityPublisher.publish(bestMatch->getTrajectory()->getTwistMessage());
+		velocityPublisher.publish(bestMatch->getTrajectory()->getMotionModelAs<SkidSteerModel>()->getTwistMessage());
 
 		/**
 		 * Publish local cost map
@@ -156,24 +100,32 @@ Trajectory::VectorPtr Wandering::createTrajectories(double simulationTime, doubl
 
 	Trajectory::Ptr trajectory;
 
-	trajectory = trajectorySimulator.simulate(0.0, -angularVelocity_);
+	trajectory = trajectorySimulator.simulate(new SkidSteerModel(0.3, -1.0));
+	trajectory->setWeight(0.4);
+	trajectories->push_back(trajectory);
+
+	trajectory = trajectorySimulator.simulate(new SkidSteerModel(0.5, -1.0));
 	trajectory->setWeight(0.5);
 	trajectories->push_back(trajectory);
 
-//	trajectory = trajectorySimulator.simulate(0.3, -0.25);
-//	trajectory->setWeight(0.75);
-//	trajectories->push_back(trajectory);
+	trajectory = trajectorySimulator.simulate(new SkidSteerModel(0.5, -0.5));
+	trajectory->setWeight(0.75);
+	trajectories->push_back(trajectory);
 
-	trajectory = trajectorySimulator.simulate(linearVelocity_, 0);
+	trajectory = trajectorySimulator.simulate(new SkidSteerModel(0.5, 0));
 	trajectory->setWeight(1.0);
 	trajectories->push_back(trajectory);
 
-//	trajectory = trajectorySimulator.simulate(0.3, 0.25);
-//	trajectory->setWeight(0.75);
-//	trajectories->push_back(trajectory);
+	trajectory = trajectorySimulator.simulate(new SkidSteerModel(0.5, 0.5));
+	trajectory->setWeight(0.75);
+	trajectories->push_back(trajectory);
 
-	trajectory = trajectorySimulator.simulate(0.0, angularVelocity_);
+	trajectory = trajectorySimulator.simulate(new SkidSteerModel(0.5, 1.0));
 	trajectory->setWeight(0.5);
+	trajectories->push_back(trajectory);
+
+	trajectory = trajectorySimulator.simulate(new SkidSteerModel(0.3, 1.0));
+	trajectory->setWeight(0.4);
 	trajectories->push_back(trajectory);
 
 	return trajectories;

@@ -28,8 +28,8 @@
 
 #include <wanderer/trajectory/Trajectory.h>
 
-Trajectory::Trajectory(double linearVelocity, double angularVelocity, double weight)
-	: weight_(weight), linearVelocity_(linearVelocity), angularVelocity_(angularVelocity) {
+Trajectory::Trajectory(const IMotionModel* motionModel, double weight)
+	: weight_(weight), motionModel_(const_cast<IMotionModel*>(motionModel)) {
 	path_ = nav_msgs::Path::Ptr(new nav_msgs::Path());
 }
 
@@ -82,13 +82,6 @@ void Trajectory::setWeight(double weight) {
 	weight_ = weight;
 }
 
-geometry_msgs::Twist::Ptr Trajectory::getTwistMessage() const {
-	geometry_msgs::Twist::Ptr message(new geometry_msgs::Twist());
-	message->linear.x = getLinearVelocity();
-	message->angular.z = getAngularVelocity();
-	return message;
-}
-
 void Trajectory::rotate(double angle) {
 	tf::Stamped<tf::Transform> rotationTf;
 	rotationTf.setOrigin(tf::Vector3(0, 0, 0));
@@ -100,9 +93,4 @@ void Trajectory::rotate(double angle) {
 		tf.setData(rotationTf * tf);
 		tf::poseStampedTFToMsg(tf, pose);
 	}
-}
-
-void Trajectory::setVelocities(double linear, double angular) {
-	linearVelocity_ = linear;
-	angularVelocity_ = angular;
 }

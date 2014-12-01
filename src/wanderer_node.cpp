@@ -28,6 +28,7 @@
 
 
 #include <wanderer/Wandering.h>
+#include <wanderer/trajectory/simulator/models/SkidSteerModel.h>
 
 
 int main(int argc, char **argv) {
