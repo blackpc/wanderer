@@ -36,7 +36,7 @@
 
 
 /*
- * Trajectory simulation model based on skid steer
+ * Trajectory simulation motion model based on skid steer
  */
 class SkidSteerModel : public IMotionModel {
 
@@ -56,10 +56,6 @@ public:
 		linearVelocity_ = other.getLinearVelocity();
 		angularVelocity_ = other.getAngularVelocity();
 	}
-
-//	virtual IMotionModel* clone() const {
-//		return new SkidSteerModel(*this);
-//	}
 
 public:
 

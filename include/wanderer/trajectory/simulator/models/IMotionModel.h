@@ -30,13 +30,15 @@
 #define INCLUDE_WANDERER_TRAJECTORY_SIMULATOR_MODELS_IMOTIONMODEL_H_
 
 
+#include <boost/noncopyable.hpp>
+
 #include <tf/tf.h>
 
 
 /**
  * Motion model interface used by @see TrajectorySimulator
  */
-class IMotionModel {
+class IMotionModel : public boost::noncopyable {
 
 public:
 
@@ -48,11 +50,6 @@ public:
 	 */
 	IMotionModel(bool constantMotion)
 		: constantMotion_(constantMotion) { }
-
-	IMotionModel(const IMotionModel& other)
-		: constantMotion_(other.constantMotion_) { }
-
-//	virtual IMotionModel* clone() const = 0;
 
 	virtual ~IMotionModel() { }
 
