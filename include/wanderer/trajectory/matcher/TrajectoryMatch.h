@@ -93,6 +93,14 @@ public:
 		return trajectory_;
 	}
 
+	/**
+	 * Returns true if path goes through an obstacle
+	 * @return
+	 */
+	inline bool isBlocked() const {
+		return getScore() <= 0;
+	}
+
 private:
 
 	const double score_;

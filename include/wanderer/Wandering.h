@@ -60,6 +60,7 @@ class Wandering {
 public:
 
 	Wandering(const string& robotId, const string& baseFrameId, bool enabled);
+	virtual ~Wandering();
 
 public:
 
@@ -72,10 +73,22 @@ private:
 	bool publishStop_;
 	string baseFrameId_;
 
+	ros::Time preferSideChangeTime_;
+	bool preferRight_;
+
+	ITrajectoryMatcher* trajectoryMatcher_;
+
+	Trajectory::Ptr frontTrajectory_;
+	Trajectory::VectorPtr rightTrajectories_;
+	Trajectory::VectorPtr leftTrajectories_;
+	Trajectory::VectorPtr rearTrajectories_;
+
 private:
 
-	Trajectory::VectorPtr createTrajectories(
-			double simulationTime, double granularity) const;
+	TrajectoryMatch::Ptr chooseBestTrajectory(CostMap& costMap);
+
+	void createTrajectories(
+			double simulationTime, double granularity);
 
 	void stateCallback(const std_msgs::String::Ptr& message);
 };
