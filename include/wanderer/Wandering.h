@@ -35,11 +35,14 @@
 #include <boost/thread.hpp>
 #include <boost/foreach.hpp>
 
+#include <std_msgs/String.h>
+
 #include <wanderer/costmap/CostMap.h>
 #include <wanderer/costmap/datasource/LaserScanDataSource.h>
 #include <wanderer/trajectory/simulator/TrajectorySimulator.h>
 #include <wanderer/trajectory/matcher/SimpleTrajectoryMatcher.h>
 #include <wanderer/trajectory/simulator/models/SkidSteerModel.h>
+#include <wanderer/trajectory/simulator/models/AckermannModel.h>
 
 
 using namespace std;
@@ -56,23 +59,25 @@ class Wandering {
 
 public:
 
-	Wandering(double minFrontDistance, double linearVelocity, double angularVelocity);
+	Wandering(const string& robotId, const string& baseFrameId, bool enabled);
 
 public:
 
-	void spin() const;
+	void spin();
+
+private:
+
+	string robotId_;
+	bool enabled_;
+	bool publishStop_;
+	string baseFrameId_;
 
 private:
 
 	Trajectory::VectorPtr createTrajectories(
 			double simulationTime, double granularity) const;
 
-private:
-
-	double minFrontDistance_;
-	double linearVelocity_;
-	double angularVelocity_;
-
+	void stateCallback(const std_msgs::String::Ptr& message);
 };
 
 #endif /* INCLUDE_WANDERER_WANDERING_H_ */

@@ -35,13 +35,12 @@ int main(int argc, char **argv) {
 	ros::init(argc, argv, "wanderer_node");
 	ros::NodeHandle nodePrivate("~");
 
-	double linearVelocity, angularVelocity, minDistance;
+	string robotId, baseFrameId;
 
-	nodePrivate.param("linear_velocity", linearVelocity, 1.5);
-	nodePrivate.param("angular_velocity", angularVelocity, 0.5);
-	nodePrivate.param("front_distance", minDistance, 1.0);
+	nodePrivate.param("robot_id", robotId, string("agent1"));
+	nodePrivate.param("base_link", baseFrameId, string("/agent1/base_link"));
 
-	Wandering wanderer(minDistance, linearVelocity, angularVelocity);
+	Wandering wanderer(robotId, baseFrameId, false);
 
 	wanderer.spin();
 	return 0;
