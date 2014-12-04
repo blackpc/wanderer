@@ -39,6 +39,7 @@
 #include <nav_msgs/OccupancyGrid.h>
 
 #include <wanderer/costmap/datasource/ICostMapDataSource.h>
+#include <wanderer/costmap/parameters/IParametersProvider.h>
 
 
 using namespace std;
@@ -55,6 +56,7 @@ public:
 
 	/**
 	 * Initializes the cost map with specified parameters
+	 * @param dataSource Data source for cost map filling
 	 * @param inflationRadius Inflation radius in meters
 	 * @param mapWidth Map width in meters
 	 * @param mapHeight Map height in meters
@@ -66,6 +68,18 @@ public:
 	 */
 	CostMap(ICostMapDataSource* dataSource, double inflationRadius, double mapWidth,
 			double mapHeight, double resolution, const string& frameId);
+
+	/**
+	 * Initializes the cost map with specified parameters
+	 * @param dataSource
+	 * @param parametersProvider
+	 */
+	CostMap(ICostMapDataSource* dataSource, IParametersProvider* parametersProvider);
+
+	/**
+	 * Deletes data source and parameters provider pointers if needed
+	 */
+	virtual ~CostMap();
 
 public:
 
@@ -107,6 +121,11 @@ protected:
 	ICostMapDataSource* dataSource_;
 
 	/**
+	 * Cost map parameters provider
+	 */
+	IParametersProvider* parametersProvider_;
+
+	/**
 	 * Holds the grid array
 	 */
 	nav_msgs::OccupancyGrid::Ptr occupancyGrid_;
@@ -129,6 +148,24 @@ protected:
 protected:
 
 	/**
+	 * Initializes the cost map with specified parameters
+	 * @param dataSource Data source for cost map filling
+	 * @param parametersProvider Cost map parameters provider
+	 * @param inflationRadius Inflation radius in meters
+	 * @param mapWidth Map width in meters
+	 * @param mapHeight Map height in meters
+	 * @param resolution
+	 * @param frameId Robot's frame id, all points from the ICostMapDataSource will be transformed into this frame.
+	 * 				  It also will be the frame id of the published map
+	 * @warning Currently the origin of the map it the center
+	 * @todo add originX, originY
+	 */
+	void initializeCostMap(ICostMapDataSource* dataSource,
+			IParametersProvider* parametersProvider,
+			double inflationRadius, double mapWidth,
+			double mapHeight, double resolution, string frameId);
+
+	/**
 	 * Prints summary to ROS console
 	 */
 	void printSummary() const;
@@ -141,7 +178,7 @@ protected:
 	 * @param frameId
 	 */
 	void createOccupancyGrid(double mapWidth,
-			double mapHeight, double resolution, const string frameId);
+			double mapHeight, double resolution, const string& frameId);
 
 	/**
 	 * Clear cost map callback from ICostMapDataSource

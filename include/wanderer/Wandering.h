@@ -39,6 +39,7 @@
 
 #include <wanderer/costmap/CostMap.h>
 #include <wanderer/costmap/datasource/LaserScanDataSource.h>
+#include <wanderer/costmap/parameters/RosParametersProvider.h>
 #include <wanderer/trajectory/simulator/TrajectorySimulator.h>
 #include <wanderer/trajectory/matcher/SimpleTrajectoryMatcher.h>
 #include <wanderer/trajectory/simulator/models/SkidSteerModel.h>

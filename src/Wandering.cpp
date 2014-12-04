@@ -90,7 +90,7 @@ void Wandering::spin() {
 	srand(time(0));
 
 	LaserScanDataSource* laserScanDataSource = new LaserScanDataSource(nodePrivate, "/scan");
-	CostMap costMap(laserScanDataSource, 0.25, 3, 3, 0.025, baseFrameId_);
+	CostMap costMap(laserScanDataSource, new RosParametersProvider());
 
 	/**
 	 * Publishers

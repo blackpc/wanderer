@@ -29,11 +29,61 @@
 #include <wanderer/costmap/CostMap.h>
 
 CostMap::CostMap(ICostMapDataSource* dataSource, double inflationRadius, double mapWidth,
-		double mapHeight, double resolution, const string& frameId)
-	: inflationRadius_(inflationRadius), dataSource_(dataSource) {
+		double mapHeight, double resolution, const string& frameId) {
 
+	initializeCostMap(dataSource, NULL, inflationRadius,
+			mapWidth, mapHeight, resolution, frameId);
+}
+
+CostMap::CostMap(ICostMapDataSource* dataSource,
+		IParametersProvider* parametersProvider) {
+	BOOST_ASSERT_MSG(parametersProvider != NULL, "CostMap: Parameters provider is NULL");
+	initializeCostMap(dataSource, parametersProvider, 0, 0, 0, 0, "");
+}
+
+CostMap::~CostMap() {
+	if (dataSource_ != NULL) {
+		delete dataSource_;
+		dataSource_ = NULL;
+	}
+
+	if (parametersProvider_ != NULL) {
+		delete parametersProvider_;
+		parametersProvider_ = NULL;
+	}
+}
+
+void CostMap::initializeCostMap(ICostMapDataSource* dataSource,
+		IParametersProvider* parametersProvider,
+		double inflationRadius, double mapWidth, double mapHeight,
+		double resolution, string frameId) {
+
+	BOOST_ASSERT_MSG(dataSource != NULL, "CostMap: Data source is NULL");
+
+	/**
+	 * If parametersProvider presents, use it
+	 * to fetch parameters
+	 */
+	if (parametersProvider != NULL) {
+		inflationRadius = parametersProvider->getInflationRadius();
+		mapWidth = parametersProvider->getMapWidth();
+		mapHeight = parametersProvider->getMapHeight();
+		resolution = parametersProvider->getMapResolution();
+		frameId = parametersProvider->getMapFrameId();
+	}
+
+	dataSource_ = dataSource;
+	parametersProvider_ = parametersProvider;
+	inflationRadius_ = inflationRadius;
+
+	/**
+	 * Creates map array
+	 */
 	createOccupancyGrid(mapWidth, mapHeight, resolution, frameId);
 
+	/**
+	 * Subscribe to data source's callbacks
+	 */
 	dataSource_->clearMapCallback =
 			boost::bind(&CostMap::clearMapCallback, this);
 	dataSource_->emitPointCallback =
@@ -72,7 +122,7 @@ void CostMap::printSummary() const {
 }
 
 void CostMap::createOccupancyGrid(double mapWidth,
-		double mapHeight, double resolution, const string frameId) {
+		double mapHeight, double resolution, const string& frameId) {
 
 	occupancyGrid_ = nav_msgs::OccupancyGrid::Ptr(
 			new nav_msgs::OccupancyGrid());
