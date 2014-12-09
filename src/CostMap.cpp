@@ -144,7 +144,7 @@ void CostMap::createOccupancyGrid(double mapWidth,
 
 }
 
-char CostMap::getCellValue(const geometry_msgs::Pose& pose) const {
+signed char CostMap::getCellValue(const geometry_msgs::Pose& pose) const {
 	cv::Point pixel = localCoordinatesToPixel(pose.position.x, pose.position.y);
 
 	if (isInBounds(pixel))

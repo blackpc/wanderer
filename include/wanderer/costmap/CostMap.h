@@ -100,10 +100,10 @@ public:
 	}
 
 	/**
-	 * Set all cells of the map to unknown(-1)
+	 * Set all cells of the map to free(0)
 	 */
 	inline void clearMap() {
-		memset(occupancyGrid_->data.data(), -1, occupancyGrid_->data.size());
+		memset(occupancyGrid_->data.data(), 0, occupancyGrid_->data.size());
 	}
 
 	/**
@@ -111,7 +111,7 @@ public:
 	 * @param pose Position should be in cost map's frame
 	 * @return Cell value: Unknown(-1), Free(0), Occupied(1..100)
 	 */
-	char getCellValue(const geometry_msgs::Pose& pose) const;
+	signed char getCellValue(const geometry_msgs::Pose& pose) const;
 
 protected:
 
