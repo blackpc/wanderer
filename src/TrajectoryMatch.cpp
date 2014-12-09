@@ -1,3 +1,4 @@
+
 /**
  * Filename: TrajectoryMatch.cpp
  *   Author: Igor Makhtes
@@ -29,9 +30,11 @@
 #include <wanderer/trajectory/matcher/TrajectoryMatch.h>
 
 TrajectoryMatch::TrajectoryMatch(const Trajectory::Ptr& trajectory, double score)
-	: trajectory_(trajectory), score_(score) {
+        : trajectory_(trajectory), score_(score) {
 
-	if (score_ < -1 || score_ > 1)
-		throw new std::invalid_argument("score");
+        if (score_ < -1 || score_ > 1) {
+                ROS_ERROR("Illegal trajectory scrore = %f", score);
+                throw new std::invalid_argument("score");
+        }
 }
 
