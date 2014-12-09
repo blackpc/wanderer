@@ -43,10 +43,24 @@ Wandering::~Wandering() {
 }
 
 TrajectoryMatch::Ptr Wandering::chooseBestTrajectory(CostMap& costMap) {
-	TrajectoryMatch::Ptr frontMatch = trajectoryMatcher_->match(costMap, frontTrajectory_);
-	TrajectoryMatch::SetPtr leftMatches = trajectoryMatcher_->match(costMap, leftTrajectories_);
-	TrajectoryMatch::SetPtr rightMatches = trajectoryMatcher_->match(costMap, rightTrajectories_);
-	TrajectoryMatch::SetPtr rearMatches = trajectoryMatcher_->match(costMap, rearTrajectories_);
+
+	TrajectoryMatch::Ptr frontMatch =
+			trajectoryMatcher_->match(costMap, frontTrajectory_);
+
+	TrajectoryMatch::SetPtr leftMatches =
+			trajectoryMatcher_->match(costMap, leftTrajectories_);
+
+	TrajectoryMatch::SetPtr rightMatches =
+			trajectoryMatcher_->match(costMap, rightTrajectories_);
+
+	TrajectoryMatch::SetPtr rearLeftMatches =
+			trajectoryMatcher_->match(costMap, rearLeftTrajectories_);
+
+	TrajectoryMatch::SetPtr rearRightMatches =
+			trajectoryMatcher_->match(costMap, rearRightTrajectories_);
+
+	TrajectoryMatch::Ptr rearMatch =
+			trajectoryMatcher_->match(costMap, rearTrajectory_);
 
 	TrajectoryMatch::SetPtr tempSet(new TrajectoryMatch::Set());
 
@@ -75,10 +89,26 @@ TrajectoryMatch::Ptr Wandering::chooseBestTrajectory(CostMap& costMap) {
 				return *leftMatches->begin();
 		}
 
-
+		tempSet->insert(rearMatch);
 		tempSet->insert(*rightMatches->begin());
 		tempSet->insert(*leftMatches->begin());
-		tempSet->insert(*rearMatches->begin());
+
+		if (rearLeftMatches->begin()->get()->getScore() ==
+				rearRightMatches->begin()->get()->getScore()) {
+
+			/**
+			 * If front right is preferable, then choose rear left to
+			 * turn in place
+			 */
+			if (preferRight_)
+				tempSet->insert(*rearLeftMatches->begin());
+			else
+				tempSet->insert(*rearRightMatches->begin());
+		} else {
+			tempSet->insert(*rearLeftMatches->begin());
+			tempSet->insert(*rearRightMatches->begin());
+		}
+
 
 		return *tempSet->begin();
 	}
@@ -96,10 +126,10 @@ void Wandering::spin() {
 	 * Publishers
 	 */
 	ros::Publisher mapPublisher = nodePrivate.advertise<nav_msgs::OccupancyGrid>("costmap", 1, false);
-	ros::Publisher pathPublisher = nodePrivate.advertise<nav_msgs::Path>("path", 1000, false);
+	ros::Publisher pathPublisher = nodePrivate.advertise<nav_msgs::Path>("path", 1, false);
 	ros::Publisher bestPathPublisher = nodePrivate.advertise<nav_msgs::Path>("path_best", 1, false);
 	ros::Publisher ackermannPublisher = nodePrivate.advertise<ackermann_msgs::AckermannDriveStamped>("/ackermann_cmd", 1, false);
-	ros::Subscriber stateSubscriber = nodePrivate.subscribe(string("/decision_making/" + robotId_ + "/events"), 10, &Wandering::stateCallback, this);
+	ros::Subscriber stateSubscriber = nodePrivate.subscribe(string("/decision_making/" + robotId_ + "/events"), 1, &Wandering::stateCallback, this);
 
 	createTrajectories(0.75, 0.1);
 
@@ -128,6 +158,7 @@ void Wandering::spin() {
 		 * Publish all paths
 		 */
 		pathPublisher.publish(frontTrajectory_->getPath(true, baseFrameId_));
+		pathPublisher.publish(rearTrajectory_->getPath(true, baseFrameId_));
 
 		for (int i = 0; i < leftTrajectories_->size(); ++i) {
 			pathPublisher.publish((*leftTrajectories_)[i]->getPath(true, baseFrameId_));
@@ -139,8 +170,13 @@ void Wandering::spin() {
 			boost::this_thread::sleep(boost::posix_time::milliseconds(1));
 		}
 
-		for (int i = 0; i < rearTrajectories_->size(); ++i) {
-			pathPublisher.publish((*rearTrajectories_)[i]->getPath(true, baseFrameId_));
+		for (int i = 0; i < rearLeftTrajectories_->size(); ++i) {
+			pathPublisher.publish((*rearLeftTrajectories_)[i]->getPath(true, baseFrameId_));
+			boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+		}
+
+		for (int i = 0; i < rearRightTrajectories_->size(); ++i) {
+			pathPublisher.publish((*rearLeftTrajectories_)[i]->getPath(true, baseFrameId_));
 			boost::this_thread::sleep(boost::posix_time::milliseconds(1));
 		}
 
@@ -162,7 +198,6 @@ void Wandering::spin() {
 		rate.sleep();
 	}
 
-	delete laserScanDataSource;
 }
 
 void Wandering::createTrajectories(double simulationTime, double granularity) {
@@ -170,7 +205,8 @@ void Wandering::createTrajectories(double simulationTime, double granularity) {
 
 	leftTrajectories_  = Trajectory::VectorPtr(new Trajectory::Vector());
 	rightTrajectories_ = Trajectory::VectorPtr(new Trajectory::Vector());
-	rearTrajectories_  = Trajectory::VectorPtr(new Trajectory::Vector());
+	rearLeftTrajectories_  = Trajectory::VectorPtr(new Trajectory::Vector());
+	rearRightTrajectories_  = Trajectory::VectorPtr(new Trajectory::Vector());
 
 	Trajectory::Ptr trajectory;
 
@@ -191,15 +227,15 @@ void Wandering::createTrajectories(double simulationTime, double granularity) {
 	trajectory->setWeight(0.5);
 	leftTrajectories_->push_back(trajectory);
 
-	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, 0.1, 0.785398163));
+	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, 0.35, 0.785398163));
 	trajectory->setWeight(0.38);
 	leftTrajectories_->push_back(trajectory);
 
-	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, 0.2, 0.785398163));
+	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, 0.40, 0.785398163));
 	trajectory->setWeight(0.38);
 	leftTrajectories_->push_back(trajectory);
 
-	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, 0.3, 0.785398163));
+	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, 0.45, 0.785398163));
 	trajectory->setWeight(0.39);
 	leftTrajectories_->push_back(trajectory);
 
@@ -214,15 +250,15 @@ void Wandering::createTrajectories(double simulationTime, double granularity) {
 	trajectory->setWeight(0.4);
 	rightTrajectories_->push_back(trajectory);
 
-	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, 0.3, -0.785398163));
+	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, 0.45, -0.785398163));
 	trajectory->setWeight(0.39);
 	rightTrajectories_->push_back(trajectory);
 
-	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, 0.2, -0.785398163));
+	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, 0.40, -0.785398163));
 	trajectory->setWeight(0.38);
 	rightTrajectories_->push_back(trajectory);
 
-	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, 0.1, -0.785398163));
+	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, 0.35, -0.785398163));
 	trajectory->setWeight(0.38);
 	rightTrajectories_->push_back(trajectory);
 
@@ -237,25 +273,24 @@ void Wandering::createTrajectories(double simulationTime, double granularity) {
 	/**
 	 * Rear
 	 */
-	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, -0.3, -0.785398163));
+	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, -0.45, -0.785398163));
 	trajectory->setWeight(0.04);
-	rearTrajectories_->push_back(trajectory);
+	rearRightTrajectories_->push_back(trajectory);
 
-	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, -0.1, -0.785398163));
+	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, -0.5, -0.785398163));
 	trajectory->setWeight(0.04);
-	rearTrajectories_->push_back(trajectory);
+	rearRightTrajectories_->push_back(trajectory);
 
-	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, -0.3, 0));
-	trajectory->setWeight(0.05);
-	rearTrajectories_->push_back(trajectory);
+	rearTrajectory_ = trajectorySimulator.simulate(new AckermannModel(0.35, -0.4, 0));
+	rearTrajectory_->setWeight(0.05);
 
-	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, -0.1, 0.785398163));
+	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, -0.5, 0.785398163));
 	trajectory->setWeight(0.06);
-	rearTrajectories_->push_back(trajectory);
+	rearLeftTrajectories_->push_back(trajectory);
 
-	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, -0.3, 0.785398163));
+	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, -0.45, 0.785398163));
 	trajectory->setWeight(0.06);
-	rearTrajectories_->push_back(trajectory);
+	rearLeftTrajectories_->push_back(trajectory);
 
 }
 
@@ -263,8 +298,13 @@ void Wandering::stateCallback(const std_msgs::String::Ptr& message) {
 	if (message->data == "RESUME") {
 		enabled_ = true;
 		publishStop_ = false;
+		ROS_INFO("Started!");
 	} else if (message->data == "PAUSE") {
-		publishStop_ = true;
+
+		if (enabled_)
+			publishStop_ = true;
+
 		enabled_ = false;
+		ROS_INFO("Stoped!");
 	}
 }

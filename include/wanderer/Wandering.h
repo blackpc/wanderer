@@ -82,7 +82,10 @@ private:
 	Trajectory::Ptr frontTrajectory_;
 	Trajectory::VectorPtr rightTrajectories_;
 	Trajectory::VectorPtr leftTrajectories_;
-	Trajectory::VectorPtr rearTrajectories_;
+
+	Trajectory::Ptr rearTrajectory_;
+	Trajectory::VectorPtr rearRightTrajectories_;
+	Trajectory::VectorPtr rearLeftTrajectories_;
 
 private:
 
