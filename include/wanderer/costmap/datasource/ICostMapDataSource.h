@@ -40,7 +40,7 @@
 using namespace std;
 
 
-class CostMap;
+//class CostMap;
 
 
 /*
@@ -48,7 +48,7 @@ class CostMap;
  */
 class ICostMapDataSource {
 
-	friend CostMap;
+//	friend CostMap;
 
 public:
 
@@ -80,7 +80,8 @@ public:
 		emitPointCallback(x, y, boost::ref(frameId), boost::ref(stamp));
 	}
 
-private:
+//private:
+public:
 
 	typedef boost::function<void()> ClearMapCallback;
 	typedef boost::function<void(double, double, const string&, const ros::Time&)> EmitPointCallback;

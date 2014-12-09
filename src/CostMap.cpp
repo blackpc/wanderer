@@ -140,7 +140,7 @@ void CostMap::createOccupancyGrid(double mapWidth,
 
 	cvMatrix_ = cv::Mat(
 			occupancyGrid_->info.height, occupancyGrid_->info.width,
-			CV_8UC1, occupancyGrid_->data.data());
+			CV_8SC1, occupancyGrid_->data.data());
 
 }
 

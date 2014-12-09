@@ -33,7 +33,7 @@ TrajectoryMatch::TrajectoryMatch(const Trajectory::Ptr& trajectory, double score
         : trajectory_(trajectory), score_(score) {
 
         if (score_ < -1 || score_ > 1) {
-                ROS_ERROR("Illegal trajectory scrore = %f", score);
+                ROS_ERROR("Illegal trajectory score = %f", score);
                 throw new std::invalid_argument("score");
         }
 }

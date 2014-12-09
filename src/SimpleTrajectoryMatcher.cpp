@@ -59,7 +59,7 @@ TrajectoryMatch::Ptr SimpleTrajectoryMatcher::match(const CostMap& costMap,
 
 	for (int i = 0; i < path->poses.size(); ++i) {
 		const geometry_msgs::Pose& pose = path->poses[i].pose;
-		double pointValue = 1 + costMap.getCellValue(pose);
+		double pointValue = 1.0 + (double)costMap.getCellValue(pose);
 
 		/**
 		 * Fatal path check

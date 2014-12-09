@@ -2,13 +2,14 @@ cmake_minimum_required(VERSION 2.8.3)
 project(wanderer)
 
 find_package(catkin REQUIRED COMPONENTS
-  cv_bridge
   geometry_msgs
   nav_msgs
   roscpp
   sensor_msgs
   tf
 )
+
+find_package(OpenCV REQUIRED COMPONENTS imgproc)
 
 catkin_package()
 
@@ -34,6 +35,7 @@ add_executable(wanderer_node
 
 target_link_libraries(wanderer_node 
 	${catkin_LIBRARIES}
+	${OpenCV_LIBRARIES}
 )
 
 #############
