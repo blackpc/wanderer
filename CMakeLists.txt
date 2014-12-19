@@ -38,6 +38,16 @@ target_link_libraries(wanderer_node
 	${OpenCV_LIBRARIES}
 )
 
+##########
+## Test ##
+##########
+
+catkin_add_gtest(utest test/utest.cpp)
+target_link_libraries(utest 
+	${catkin_LIBRARIES}
+	${OpenCV_LIBRARIES}
+)
+
 #############
 ## Install ##
 #############
