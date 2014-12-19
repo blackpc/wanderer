@@ -14,8 +14,8 @@ TEST(TestSuite, testCase2)
 {
 	ASSERT_TRUE(0 == 0);
 	ASSERT_TRUE(0 == 0);
-	ASSERT_TRUE(0 == 0); 
-	ASSERT_TRUE(1 == 1);
+	ASSERT_TRUE(0 == 0);
+	ASSERT_TRUE(1 == 2);
 }
 
 // Run all the tests that were declared with TEST()
