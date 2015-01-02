@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>wanderer</name>
-  <version>1.1.0</version>
+  <version>1.0.0</version>
   <description>Simple wandering algorithm</description>
   <maintainer email="blackpc.me@gmail.com">Igor Makhtes</maintainer>
   <author email="blackpc.me@gmail.com">Igor Makhtes</author>
@@ -13,10 +13,12 @@
   <build_depend>sensor_msgs</build_depend>
   <build_depend>tf</build_depend>
   <build_depend>cv_bridge</build_depend>
+  <build_depend>ackermann_msgs</build_depend>
   <run_depend>geometry_msgs</run_depend>
   <run_depend>nav_msgs</run_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>sensor_msgs</run_depend>
   <run_depend>tf</run_depend>
   <run_depend>cv_bridge</run_depend>
+  <run_depend>ackermann_msgs</run_depend>
 </package>
