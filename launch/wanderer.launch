@@ -2,7 +2,9 @@
 
 	<node pkg="stage_ros" type="stageros" name="stage" args="$(find stage_ros)/world/willow-erratic.world" />
 
-	<node pkg="wanderer" type="wanderer_node" name="wanderer">
+	<node pkg="wanderer" type="wanderer_node" name="wanderer" output="screen">
+        <remap from="scan" to="base_scan" />
+        <param name="base_link" value="base_link" />
 	</node>
 
 	<node pkg="rviz" type="rviz" name="rviz" args="-d $(find wanderer)/rviz/debug.rviz" />
