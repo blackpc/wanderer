@@ -76,6 +76,8 @@ private:
 
 	ros::Time preferSideChangeTime_;
 	bool preferRight_;
+	bool randomSteer_;
+	ros::Time randomSteerTime_;
 
 	ITrajectoryMatcher* trajectoryMatcher_;
 
@@ -83,9 +85,8 @@ private:
 	Trajectory::VectorPtr rightTrajectories_;
 	Trajectory::VectorPtr leftTrajectories_;
 
-	Trajectory::Ptr rearTrajectory_;
-	Trajectory::VectorPtr rearRightTrajectories_;
-	Trajectory::VectorPtr rearLeftTrajectories_;
+	Trajectory::Ptr leftInPlaceTrajectory_;
+	Trajectory::Ptr rightInPlaceTrajectory_;
 
 private:
 

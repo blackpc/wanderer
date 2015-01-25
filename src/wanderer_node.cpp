@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
 	nodePrivate.param("robot_id", robotId, string("agent1"));
 	nodePrivate.param("base_link", baseFrameId, string("/agent1/base_link"));
 
-	Wandering wanderer(robotId, baseFrameId, false);
+	Wandering wanderer(robotId, baseFrameId, true);
 
 	wanderer.spin();
 	return 0;

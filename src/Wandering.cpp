@@ -33,6 +33,8 @@ Wandering::Wandering(const string& robotId,
 	: robotId_(robotId), baseFrameId_(baseFrameId),
 	  enabled_(enabled), publishStop_(false), preferRight_(true)
 {
+    randomSteer_ = false;
+    randomSteerTime_ = ros::Time::now();
 	trajectoryMatcher_ = new SimpleTrajectoryMatcher();
 	preferSideChangeTime_ = ros::Time::now();
 }
@@ -53,23 +55,50 @@ TrajectoryMatch::Ptr Wandering::chooseBestTrajectory(CostMap& costMap) {
 	TrajectoryMatch::SetPtr rightMatches =
 			trajectoryMatcher_->match(costMap, rightTrajectories_);
 
-	TrajectoryMatch::SetPtr rearLeftMatches =
-			trajectoryMatcher_->match(costMap, rearLeftTrajectories_);
+	TrajectoryMatch::Ptr rightInPlaceMatch =
+	        trajectoryMatcher_->match(costMap, rightInPlaceTrajectory_);
 
-	TrajectoryMatch::SetPtr rearRightMatches =
-			trajectoryMatcher_->match(costMap, rearRightTrajectories_);
-
-	TrajectoryMatch::Ptr rearMatch =
-			trajectoryMatcher_->match(costMap, rearTrajectory_);
+	TrajectoryMatch::Ptr leftInPlaceMatch =
+	        trajectoryMatcher_->match(costMap, leftInPlaceTrajectory_);
 
 	TrajectoryMatch::SetPtr tempSet(new TrajectoryMatch::Set());
 
-	if ( (ros::Time::now() - preferSideChangeTime_).toSec() > 30) {
+	bool frontBlocked = false;
+
+	if (frontMatch->isBlocked() && leftMatches->begin()->get()->isBlocked() && rightMatches->begin()->get()->isBlocked())
+	    frontBlocked = true;
+
+	if ( (ros::Time::now() - preferSideChangeTime_).toSec() > 60) {
 		preferSideChangeTime_ = ros::Time::now();
 		preferRight_ = !preferRight_;
 	}
 
-	if (!frontMatch->isBlocked()) {
+	if (randomSteerTime_ < ros::Time::now()) {
+	    ros::Time nextRandomSteerUpdate =
+	            ros::Time::now() + (randomSteer_ ? ros::Duration(40) : ros::Duration(15) );
+	    randomSteerTime_ = nextRandomSteerUpdate;
+	    randomSteer_ = !randomSteer_;
+	    ROS_INFO("Random steer = %s, Prefer right = %s", randomSteer_ ? "True" : "False", preferRight_ ? "True" : "False");
+	}
+
+
+	if (frontBlocked) {
+	    return rightInPlaceMatch;
+	}
+	else if (!frontMatch->isBlocked() &&
+	        !leftMatches->begin()->get()->isBlocked() &&
+	        !rightMatches->begin()->get()->isBlocked())
+	{
+	    // All front trajectories are clear
+	    if (randomSteer_)
+	        if (preferRight_)
+	            return *rightMatches->begin();
+	        else
+	            return *leftMatches->begin();
+
+	    return frontMatch;
+	}
+	else if (!frontMatch->isBlocked()) {
 		/**
 		 * Front is free, choose it
 		 */
@@ -82,33 +111,17 @@ TrajectoryMatch::Ptr Wandering::chooseBestTrajectory(CostMap& costMap) {
 		 * so choose preferable side
 		 */
 		if (!leftMatches->begin()->get()->isBlocked() &&
-				!rightMatches->begin()->get()->isBlocked()) {
+				!rightMatches->begin()->get()->isBlocked() &&
+				leftMatches->begin()->get()->getScore() ==
+                rightMatches->begin()->get()->getScore())
+		{
 			if (preferRight_)
 				return *rightMatches->begin();
 			else
 				return *leftMatches->begin();
 		}
-
-		tempSet->insert(rearMatch);
 		tempSet->insert(*rightMatches->begin());
 		tempSet->insert(*leftMatches->begin());
-
-		if (rearLeftMatches->begin()->get()->getScore() ==
-				rearRightMatches->begin()->get()->getScore()) {
-
-			/**
-			 * If front right is preferable, then choose rear left to
-			 * turn in place
-			 */
-			if (preferRight_)
-				tempSet->insert(*rearLeftMatches->begin());
-			else
-				tempSet->insert(*rearRightMatches->begin());
-		} else {
-			tempSet->insert(*rearLeftMatches->begin());
-			tempSet->insert(*rearRightMatches->begin());
-		}
-
 
 		return *tempSet->begin();
 	}
@@ -131,7 +144,7 @@ void Wandering::spin() {
 	ros::Publisher ackermannPublisher = nodePrivate.advertise<ackermann_msgs::AckermannDriveStamped>("/ackermann_cmd", 1, false);
 	ros::Subscriber stateSubscriber = nodePrivate.subscribe(string("/decision_making/" + robotId_ + "/events"), 1, &Wandering::stateCallback, this);
 
-	createTrajectories(0.75, 0.1);
+	createTrajectories(2.5, 0.2);
 
 	ros::Rate rate(5);
 
@@ -158,26 +171,13 @@ void Wandering::spin() {
 		 * Publish all paths
 		 */
 		pathPublisher.publish(frontTrajectory_->getPath(true, baseFrameId_));
-		pathPublisher.publish(rearTrajectory_->getPath(true, baseFrameId_));
 
 		for (int i = 0; i < leftTrajectories_->size(); ++i) {
 			pathPublisher.publish((*leftTrajectories_)[i]->getPath(true, baseFrameId_));
-			boost::this_thread::sleep(boost::posix_time::milliseconds(1));
-		}
+ 		}
 
 		for (int i = 0; i < rightTrajectories_->size(); ++i) {
 			pathPublisher.publish((*rightTrajectories_)[i]->getPath(true, baseFrameId_));
-			boost::this_thread::sleep(boost::posix_time::milliseconds(1));
-		}
-
-		for (int i = 0; i < rearLeftTrajectories_->size(); ++i) {
-			pathPublisher.publish((*rearLeftTrajectories_)[i]->getPath(true, baseFrameId_));
-			boost::this_thread::sleep(boost::posix_time::milliseconds(1));
-		}
-
-		for (int i = 0; i < rearRightTrajectories_->size(); ++i) {
-			pathPublisher.publish((*rearLeftTrajectories_)[i]->getPath(true, baseFrameId_));
-			boost::this_thread::sleep(boost::posix_time::milliseconds(1));
 		}
 
 		/**
@@ -205,8 +205,6 @@ void Wandering::createTrajectories(double simulationTime, double granularity) {
 
 	leftTrajectories_  = Trajectory::VectorPtr(new Trajectory::Vector());
 	rightTrajectories_ = Trajectory::VectorPtr(new Trajectory::Vector());
-	rearLeftTrajectories_  = Trajectory::VectorPtr(new Trajectory::Vector());
-	rearRightTrajectories_  = Trajectory::VectorPtr(new Trajectory::Vector());
 
 	Trajectory::Ptr trajectory;
 
@@ -219,79 +217,33 @@ void Wandering::createTrajectories(double simulationTime, double granularity) {
 	/**
 	 * Left
 	 */
-	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, 0.5, 0.3));
-	trajectory->setWeight(0.75);
-	leftTrajectories_->push_back(trajectory);
-
-	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, 0.5, 0.5));
+	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, 0.5, 0.161799388));
 	trajectory->setWeight(0.5);
 	leftTrajectories_->push_back(trajectory);
 
-	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, 0.35, 0.785398163));
-	trajectory->setWeight(0.38);
-	leftTrajectories_->push_back(trajectory);
-
-	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, 0.40, 0.785398163));
-	trajectory->setWeight(0.38);
-	leftTrajectories_->push_back(trajectory);
-
-	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, 0.45, 0.785398163));
-	trajectory->setWeight(0.39);
-	leftTrajectories_->push_back(trajectory);
-
-	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, 0.5, 0.785398163));
+	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, 0.5, 0.261799388));
 	trajectory->setWeight(0.4);
 	leftTrajectories_->push_back(trajectory);
 
 	/**
 	 * Right
 	 */
-	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, 0.5, -0.785398163));
+	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, 0.5, -0.261799388));
 	trajectory->setWeight(0.4);
 	rightTrajectories_->push_back(trajectory);
 
-	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, 0.45, -0.785398163));
-	trajectory->setWeight(0.39);
-	rightTrajectories_->push_back(trajectory);
-
-	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, 0.40, -0.785398163));
-	trajectory->setWeight(0.38);
-	rightTrajectories_->push_back(trajectory);
-
-	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, 0.35, -0.785398163));
-	trajectory->setWeight(0.38);
-	rightTrajectories_->push_back(trajectory);
-
-	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, 0.5, -0.5));
+	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, 0.5, -0.161799388));
 	trajectory->setWeight(0.5);
 	rightTrajectories_->push_back(trajectory);
 
-	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, 0.5, -0.3));
-	trajectory->setWeight(0.75);
-	rightTrajectories_->push_back(trajectory);
-
 	/**
-	 * Rear
+	 * In place
 	 */
-	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, -0.45, -0.785398163));
-	trajectory->setWeight(0.04);
-	rearRightTrajectories_->push_back(trajectory);
+	rightInPlaceTrajectory_ = trajectorySimulator.simulate(new AckermannModel(0.2, 0.0, -1.0));
+	rightInPlaceTrajectory_->setWeight(1.0);
 
-	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, -0.5, -0.785398163));
-	trajectory->setWeight(0.04);
-	rearRightTrajectories_->push_back(trajectory);
-
-	rearTrajectory_ = trajectorySimulator.simulate(new AckermannModel(0.35, -0.4, 0));
-	rearTrajectory_->setWeight(0.05);
-
-	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, -0.5, 0.785398163));
-	trajectory->setWeight(0.06);
-	rearLeftTrajectories_->push_back(trajectory);
-
-	trajectory = trajectorySimulator.simulate(new AckermannModel(0.2, -0.45, 0.785398163));
-	trajectory->setWeight(0.06);
-	rearLeftTrajectories_->push_back(trajectory);
-
+	leftInPlaceTrajectory_ = trajectorySimulator.simulate(new AckermannModel(0.2, 0.0, 1.0));
+	leftInPlaceTrajectory_->setWeight(1.0);
 }
 
 void Wandering::stateCallback(const std_msgs::String::Ptr& message) {
